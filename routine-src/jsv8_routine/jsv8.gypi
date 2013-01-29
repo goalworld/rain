@@ -1,0 +1,12 @@
+{
+	"include_dirs":[
+		"../../deps/libev-4.11",
+		"../../rain-src/include",
+		"../../deps/v8/include",
+	],
+	"sources":[
+		"jsv8.cc",
+		"jsv8_main.cc",
+		"jsv8_ctx.cc"
+	]
+}

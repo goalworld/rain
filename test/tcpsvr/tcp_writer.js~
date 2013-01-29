@@ -1,0 +1,98 @@
+
+
+var buffer = require("buffer");
+exports.TcpWriter = TcpWriter;
+
+function TcpWriter(socket,headsz,cb){
+	if(headsz !=2 && headsz !=4){
+		throw new Error("HEADSZ NEED 2OR4");
+	}
+	this.m_headsz = headsz;
+	this.m_socket = socket;
+	this.m_sendBuf = new buffer.Buffer(1024);
+	this.m_sendsz = 0;
+	this.m_sendqueue = new Array();
+	this.m_sendtime = null;
+	this.m_cb = cb;
+}
+TcpWriter.prototype.Write = function (data){
+	if(!buffer.Buffer.isBuffer(buf) && typeof(data) != "string" ){
+		data = JSON.stringify(data);
+	}
+	if(data){
+		if(this.m_headsz == 2 && buffer.Buffer.byteLength(data) > 0xffff ){
+			throw new Error("write data is too big");
+			return ;
+		}
+		this.m_sendqueue.push(data);
+	}
+	for(;;){
+		if(this.m_sendsz < 1024 && this.m_sendqueue.length>0){
+			var buf = this.m_sendqueue.shift();
+			var len = buffer.Buffer.byteLength(data);
+			if(this.m_sendBuf.length < this.m_sendsz + len + this.m_headsz){
+				var newsz = compute_sz(this.m_sendBuf.length,this.m_sendsz + len + this.m_headsz);
+				var tmpBuf = new  buffer.Buffer(newsz);
+				if(this.m_sendsz>0){
+					this.m_sendBuf.copy(tmpBuf,0,0,this.m_sendsz);
+				}
+				this.m_sendBuf = tmpBuf;
+			}
+			if(this.m_headsz == 4){
+				this.m_sendBuf.writeUInt32BE(len, this.m_sendsz, true);
+			}else if(this.m_headsz == 2){
+				this.m_sendBuf.writeUInt16BE(len, this.m_sendsz, true);
+			}
+			this.m_sendsz+=this.m_headsz;
+			if(buffer.Buffer.isBuffer(buf)){
+				buf.copy(this.m_sendBuf,this.m_sendsz,0,buf.length);
+			}else{
+				this.m_sendBuf.utf8Write(buf,this.m_sendsz);
+			}
+			this.m_sendsz+=len;
+		}
+		if(this.m_sendsz >= 1024){
+			this._Flush();
+			break;
+		}else if(this.m_sendqueue.length==0){
+			break;
+		};
+	};
+	if(this.m_sendsz > 0 && !this.m_sendtime){
+		var self = this;
+		this.m_sendtime = setTimeout(function(){
+			self.m_sendtime = undefined;
+			self._Flush();
+		},10);
+	};
+
+	if(this.m_sendsz <=0 && this.m_sendqueue.length <=0){
+		this.m_cb();
+	}
+};
+function compute_sz(cut,need){
+	while(cut < need){
+		cut *=2;
+	}
+	return cut;
+}
+TcpWriter.prototype._Flush = function (){
+	var self = this;
+	try{
+		if(this.m_sendTime){
+			clearTimeout(this.m_sendTime);
+			this.m_sendTime = undefined;
+		};
+		if(this.m_socket && this.m_socket.write){
+			var tmpBuf = this.m_sendBuf.slice(0,this.m_sendsz);
+			this.m_sendsz = 0;
+			console.log(tmpBuf);
+			this.m_socket.write(tmpBuf,function (){
+				self.Write();
+			});
+
+		};
+	}catch(err){
+		console.log(err,err.stack);
+	};
+};

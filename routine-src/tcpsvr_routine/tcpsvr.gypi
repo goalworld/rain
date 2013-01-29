@@ -1,0 +1,13 @@
+{
+	"include_dirs":[
+		"../../deps/libev-4.11",
+		"../../rain-src/include",
+		"./"
+	],
+	"sources":[
+		"cycle_buffer.c",
+		"tcpsvr_client.c",
+		"tcpsvr_main.c",
+		"tcpsvr_server.c"
+	],
+}
