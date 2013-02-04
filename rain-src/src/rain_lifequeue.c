@@ -46,14 +46,14 @@ rainLifeQueuePush(rainRoutine rid)
 #ifdef PTHREAD_LOCK
 	pthread_mutex_lock(&lq->mtx);
 #else
-	rainMutextLock(&lq->mtx);
+	rainMutexLock(&lq->mtx);
 #endif
 	rain_queue_push(&lq->r_queue,&rid);
 #ifdef PTHREAD_LOCK
 	pthread_cond_signal(&lq->con);
 	pthread_mutex_unlock(&lq->mtx);
 #else
-	rainMutextUnLock(&lq->mtx);
+	rainMutexUnLock(&lq->mtx);
 #endif
 }
 int
@@ -64,14 +64,14 @@ rainLifeQueuePop(rainRoutine *rid)
 #ifdef PTHREAD_LOCK
 	pthread_mutex_lock(&lq->mtx);
 #else
-	rainMutextLock(&lq->mtx);
+	rainMutexLock(&lq->mtx);
 #endif
 	if( rain_queue_pop(&lq->r_queue,rid) != 0){
 #ifdef PTHREAD_LOCK
 		pthread_cond_wait(&lq->con,&lq->mtx);
 		pthread_mutex_unlock(&lq->mtx);
 #else
-		rainMutextUnLock(&lq->mtx);
+		rainMutexUnLock(&lq->mtx);
 #endif
 		return RAIN_ERROR;
 	}
