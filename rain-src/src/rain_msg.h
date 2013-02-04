@@ -16,7 +16,7 @@ enum{
 	RAIN_MSG_EXIT	=	0X100000,
 };
 
-typedef struct rainCtxMsg{
+struct rainCtxMsg{
 	rainRoutine src;
 	union{
 		void *msg;
