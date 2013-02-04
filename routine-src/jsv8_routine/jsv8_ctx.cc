@@ -74,7 +74,7 @@ jsv8_ctx_t::Send(const v8::Arguments &args)
 		v8::ThrowException(v8::String::New("argument one Need OBject With key:data"));
 	}
 	jsv8_ctx_t * ptr =  get_cppobj_ptr<jsv8_ctx_t>(args.Holder());
-	rain_msg_t msg;
+	struct rainMsg msg;
 	v8::String::Utf8Value file(v8_msg->Get(v8::String::New("data")));
 	msg.data = *file;
 	msg.sz = file.length();
@@ -117,7 +117,7 @@ jsv8_ctx_t::Responce(const v8::Arguments &args)
 		v8::ThrowException(v8::String::New("argument two Need Number"));
 	}
 	jsv8_ctx_t * ptr =  get_cppobj_ptr<jsv8_ctx_t>(args.Holder());
-	rain_msg_t msg;
+	struct rainMsg msg;
 	v8::String::Utf8Value file(v8_msg->Get(v8::String::New("data")));
 	msg.data = *file;
 	msg.sz = file.length();

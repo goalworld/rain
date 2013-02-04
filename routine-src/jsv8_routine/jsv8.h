@@ -23,8 +23,8 @@ public:
 	static v8::Handle<v8::Value> Exit(const v8::Arguments& args);
 	static v8::Handle<v8::Value> Timer(const v8::Arguments& args);
 private:
-	static  void _recv(void *arg,rainRoutine src,rain_msg_t msg,rainSession session);
-	static  void _recv_rsp(void *arg,rainRoutine src,rain_msg_t msg,rainSession session);
+	static  void _recv(void *arg,rainRoutine src,struct rainMsg msg,rainSession session);
+	static  void _recv_rsp(void *arg,rainRoutine src,struct rainMsg msg,rainSession session);
 	static  void _link(void *arg,rainRoutine exit,int code);
 	static  void _next_tick(void *arg,void *userdata);
 	static  void _time_out(void *arg,void *userdata);
@@ -36,8 +36,8 @@ public:
 private:
 	int Run();
 	v8::Handle<v8::Object> SteupRoutine(const std::string & args);
-	void Recv(rainRoutine src,rain_msg_t msg,rainSession session);
-	void RecvResponce(rainRoutine src,rain_msg_t msg,rainSession session);
+	void Recv(rainRoutine src,struct rainMsg msg,rainSession session);
+	void RecvResponce(rainRoutine src,struct rainMsg msg,rainSession session);
 	void Link(rainRoutine exit,int code);
 	typedef std::map<long,jsv8_ctx_t *> RelationMap;
 	typedef RelationMap::iterator RelationMapIter;
