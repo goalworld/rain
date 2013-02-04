@@ -8,7 +8,7 @@ routine.parent.On('exit',function(code){
 	routine.Exit(code);
 });
 function newAdd(){
-	var addRt = routine.Spawn("jsv8","add.js");
+	var addRt = routine.Spawn("jsv8","./routine_js/add.js");
 	if(addRt){
 		addRt.On("message",function(msg){
 			print(JSON.stringify(msg));
