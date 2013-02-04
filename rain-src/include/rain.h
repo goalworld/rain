@@ -32,21 +32,21 @@ enum
  * 启动一个routine-process。
  * @mod routine-process程序文件（.so)。//libjsv8.so  mod:jsv8
  */
-int rainSpawn(rainContext * ctx,const char * mod,const char *args,rainRoutine * rid);
-rainRoutine rainRoutineId(rainContext *ctx);//获取id
-rainRoutine rainPRoutineId(rainContext *ctx);//获取 parent id
+int rainSpawn(struct rainContext * ctx,const char * mod,const char *args,rainRoutine * rid);
+rainRoutine rainRoutineId(struct rainContext *ctx);//获取id
+rainRoutine rainPRoutineId(struct rainContext *ctx);//获取 parent id
 //bcopy rain_copy_e request 发送消息。回应消息
-int rainSend(rainContext * ctx,rainRoutine dest, struct rainMsg msg,int copy,rainSession * se/*in out*/);
-int rainResponce(rainContext *ctx,rainRoutine dest, struct rainMsg msg,int copy,rainSession se);
-int rainLink(rainContext *ctx,rainRoutine rid);//link rid的退出
-int rainNextTick(rainContext *ctx,void *user_data);//给自身发送一个消息-完成循环调用。
-int rainTimeout(rainContext *ctx,double timeout,void *user_data);
+int rainSend(struct rainContext * ctx,rainRoutine dest, struct rainMsg msg,int copy,rainSession * se/*in out*/);
+int rainResponce(struct rainContext *ctx,rainRoutine dest, struct rainMsg msg,int copy,rainSession se);
+int rainLink(struct rainContext *ctx,rainRoutine rid);//link rid的退出
+int rainNextTick(struct rainContext *ctx,void *user_data);//给自身发送一个消息-完成循环调用。
+int rainTimeout(struct rainContext *ctx,double timeout,void *user_data);
 
-int rainKill(rainContext *ctx,rainRoutine rid,int code);//kill某个routine
-int rainRegistName(rainContext *ctx,const char *name);//注册名字unimp
-int rainQueryName(rainContext *ctx,const char *name,rainRoutine *out);//查询名字unimp
-int rainExit(rainContext *ctx,int code);//退出routine
-int rainDebug(rainContext *ctx,const char *fmt,...);
+int rainKill(struct rainContext *ctx,rainRoutine rid,int code);//kill某个routine
+int rainRegistName(struct rainContext *ctx,const char *name);//注册名字unimp
+int rainQueryName(struct rainContext *ctx,const char *name,rainRoutine *out);//查询名字unimp
+int rainExit(struct rainContext *ctx,int code);//退出routine
+int rainDebug(struct rainContext *ctx,const char *fmt,...);
 
 //注册消息处理
 #define RAIN_CALLBACK(ctx,recv,responce,linkfn,timeoutfn,next_tickfn)\
@@ -57,11 +57,11 @@ int rainDebug(rainContext *ctx,const char *fmt,...);
 		rainSetNextTickFn((ctx),(next_tickfn));\
 		}while(0)
 //implement at rain_ctx
-int rainSetRecvfn(rainContext *ctx,rainRecvFn req);
-int rainSetRspFn(rainContext *ctx, rainRecvFn rsp);
-int rainSetLinkFn(rainContext *ctx,rainLinkFn linkfn);
-int rainSetTimeoutFn(rainContext *ctx,rainTiemoutFn timeoutfn);
-int rainSetNextTickFn(rainContext *ctx,rainTiemoutFn next_tickfn);
+int rainSetRecvfn(struct rainContext *ctx,rainRecvFn req);
+int rainSetRspFn(struct rainContext *ctx, rainRecvFn rsp);
+int rainSetLinkFn(struct rainContext *ctx,rainLinkFn linkfn);
+int rainSetTimeoutFn(struct rainContext *ctx,rainTiemoutFn timeoutfn);
+int rainSetNextTickFn(struct rainContext *ctx,rainTiemoutFn next_tickfn);
 #ifdef __cplusplus
 }
 #endif
