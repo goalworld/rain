@@ -478,7 +478,7 @@ jsv8_t::Spawn(const v8::Arguments& args)
 	v8::String::Utf8Value rain_arg(args[1]);
 	rainRoutine rd;
 	jsv8_t * js = get_cppobj_ptr<jsv8_t>(args.Holder());
-	if( rain_spawn(js->ctx_,*file,*rain_arg,&rd) ==RAIN_OK){
+	if( rainSpawn(js->ctx_,*file,*rain_arg,&rd) ==RAIN_OK){
 		jsv8_ctx_t * p = new jsv8_ctx_t(js->ctx_,rd);
 		js->relates_[rd] = p;
 		return scope.Close(jsv8_ctx_t::Register(p));
