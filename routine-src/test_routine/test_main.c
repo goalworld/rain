@@ -21,7 +21,7 @@ static void _time_out(void *env,void *userdata);
 static void _link_exit(void *env,rainRoutine exitid,int code);
 
 void *
-test_init(struct rainContext *ctx,char *args)
+testNew(struct rainContext *ctx,char *args)
 {
 	test_t * tt = malloc(sizeof(test_t));
 	tt->ctx = ctx;
@@ -49,7 +49,7 @@ test_init(struct rainContext *ctx,char *args)
 	return tt;
 }
 void
-test_destroy(void *env,int code)
+testDelete(void *env,int code)
 {
 	test_t * tt = (test_t*)env;
 	rainKill(tt->ctx,tt->jsv8_test_id,0);
