@@ -38,12 +38,6 @@ testNew(struct rainContext *ctx,char *args)
 		return NULL;
 	}
 	rainLink(ctx,tt->tcpsvr_id);
-	ret = rainSpawn(ctx,"jsv8","test.js",&(tt->jsv8_test_id));
-	if(ret == RAIN_ERROR){
-		free(tt);
-		return NULL;
-	}
-	rainLink(ctx,tt->jsv8_test_id);
 	RAIN_CALLBACK(ctx,_recv,_recv_rsp,_link_exit,_time_out,NULL);
 	rainTimeout(ctx,60.0,NULL);
 	return tt;
