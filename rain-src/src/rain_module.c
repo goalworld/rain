@@ -90,22 +90,22 @@ _open(const char * mod_name,struct rainModule *pmod)
 	}
 	int sz1= strlen(mod_name),sz2;
 
-	sz2 = strlen("_new");
+	sz2 = strlen("New");
 	char init_name[sz1+sz2+1];
 	memcpy(init_name ,mod_name,sz1);
-	memcpy(init_name+sz1,"_new",sz2);
+	memcpy(init_name+sz1,"New",sz2);
 	init_name[sz1+sz2] = 0x00;
 
-	sz2 = strlen("_delete");
+	sz2 = strlen("Delete");
 	char destroy_name[sz1+sz2+1];
 	memcpy(destroy_name,mod_name,sz1);
-	memcpy(destroy_name+sz1,"_delete",sz2);
+	memcpy(destroy_name+sz1,"Delete",sz2);
 	destroy_name[sz1+sz2] = 0x00;
 
 	rainNewFn mainfn = (rainNewFn )( dlsym(dl,init_name) );
 	rainDeleteFn delfn = ( rainDeleteFn )( dlsym(dl,destroy_name) );
 	if( !delfn || !mainfn ){
-		RAIN_LOG(0,"ERROR:dlsym _new:%p,_delete:%p",mainfn,delfn);
+		RAIN_LOG(0,"ERROR:dlsym New:%p,Delete:%p",mainfn,delfn);
 		dlclose(dl);
 		return RAIN_ERROR;
 	}
