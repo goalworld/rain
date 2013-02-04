@@ -293,7 +293,7 @@ jsv8_t::Initialize(struct rainContext *ctx,const std::string & args)
 		source = "(function(routine){"+source+"})";
 		Handle<Script> script = Script::Compile(
 				String::New(source.c_str(),source.length()),
-				String::New(file.c_str(),file.length())
+				String::New(args.c_str(),args.length())
 		);
 		Handle<Value> f_value = script->Run();
 		if (try_catch.HasCaught())  {
