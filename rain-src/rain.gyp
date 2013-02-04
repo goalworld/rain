@@ -13,7 +13,7 @@
         		'include/'
      		 ],
 			"sources":[
-				"src/rain_ctx.c",
+				"src/rain_context.c",
 				"src/rain_imp.c",
 				"src/rain_lifequeue.c",
 				"src/rain_module.c",
