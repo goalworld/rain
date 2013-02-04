@@ -78,7 +78,7 @@ rainLifeQueuePop(rainRoutine *rid)
 #ifdef PTHREAD_LOCK
 	pthread_mutex_unlock(&lq->mtx);
 #else
-	rain_mutex_unlock(&lq->mtx);
+	rainMutexUnLock(&lq->mtx);
 #endif
 	return RAIN_OK;
 }
