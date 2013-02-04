@@ -105,7 +105,7 @@ _open(const char * mod_name,struct rainModule *pmod)
 	rainNewFn mainfn = (rainNewFn )( dlsym(dl,init_name) );
 	rainDeleteFn delfn = ( rainDeleteFn )( dlsym(dl,destroy_name) );
 	if( !delfn || !mainfn ){
-		RAIN_LOG(0,"ERROR:dlsym New:%p,Delete:%p",mainfn,delfn);
+		RAIN_LOG(0,"ERROR: %s dlsym New:%p,Delete:%p",mod_name,mainfn,delfn);
 		dlclose(dl);
 		return RAIN_ERROR;
 	}
