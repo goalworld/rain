@@ -1,5 +1,8 @@
 rain
 ====
+git://github.com/v8/v8.git
+make dependens
+make native library=shared
 
 面向行为的并发模型（使用erlang的并发模型）
 所有的并发进程 都是以消息进行传递。
@@ -30,3 +33,4 @@ rain
 （4）例子。
 具体的例子可以看routine-src 中实现的几个服务。
 js-v8服务提供脚本化的能力。JS写的脚本在routine_js中。
+./rain jsv8 ./routine_js/test.js
