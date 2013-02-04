@@ -30,6 +30,9 @@ jsv8New(struct rainContext *ctx,const char *args)
 void
 jsv8Delete(void *env,int code)
 {
+	if(!env){
+		return;
+	}
 	jsv8_t * js = (jsv8_t *)env;
 	js->Exit(code);
 	delete js;

@@ -51,6 +51,9 @@ testNew(struct rainContext *ctx,char *args)
 void
 testDelete(void *env,int code)
 {
+	if(!env){
+		return;
+	}
 	test_t * tt = (test_t*)env;
 	rainKill(tt->ctx,tt->jsv8_test_id,0);
 	free(env);
