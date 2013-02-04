@@ -214,16 +214,16 @@ jsv8_t::Exit(int code)
 jsv8_t::~jsv8_t()
 {
 	if(!this->exit_.IsEmpty()){
-		this->exit_.Dispose(/*this->solt_*/);
+		this->exit_.Dispose(this->solt_);
 	}
 	if(!this->recv_.IsEmpty()){
-		this->recv_.Dispose(/*this->solt_*/);
+		this->recv_.Dispose(this->solt_);
 	}
 	if(!this->exit_.IsEmpty()){
-		this->exit_.Dispose(/*this->solt_*/);
+		this->exit_.Dispose(this->solt_);
 	}
 	if(!this->v8ctx_.IsEmpty()){
-		this->v8ctx_.Dispose(/*this->solt_*/);
+		this->v8ctx_.Dispose(this->solt_);
 	}
 	if(this->solt_){
 		this->solt_->Dispose();
@@ -363,7 +363,7 @@ jsv8_t::_time_out(void *arg,void *userdata)
 		if(--iter->second.repeat_ >= 0){
 			rainTimeout(js->ctx_,iter->second.times_,(void *)(ptrdiff_t)(id));
 		}else{
-			iter->second.cb_.Dispose(/*js->solt_*/);
+			iter->second.cb_.Dispose(js->solt_);
 			js->timers_.erase(iter);
 		}
 
