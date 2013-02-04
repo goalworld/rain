@@ -18,7 +18,7 @@ struct rainTimer
 	double timeout;
 	double now;
 	double lefttime;
-	struct rain_timer_s * next;
+	struct rainTimer * next;
 };
 static void
 _pending_times(struct rainTimer* timer)
@@ -31,15 +31,15 @@ _pending_times(struct rainTimer* timer)
 	//rain_ctx_pushmsg(timer->ctx,msg);
 }
 
-typedef struct rain_timermgr_s
+struct rainTimerMgr
 {
 	struct rainTimer * head;
 	struct rainTimer * runhead;
 	double min;
 	rainMutex mtx;
-}rain_timermgr_t;
+};
 
-static rain_timermgr_t mgr;
+static struct  rainTimerMgr mgr;
 
 int
 rainTimerInit()
