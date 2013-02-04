@@ -1,4 +1,4 @@
-var console = require("/home/wd/src/rain/routine_js/lib.js");
+
 function main()
 {
 	routine.On("message",function (src,msg){
