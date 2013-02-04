@@ -11,6 +11,6 @@
 int rain_rpc_init(){
 	return RAIN_OK;
 }
-int rain_rpc_send(routine_t dest, rain_ctxmsg_t msg){
+int rain_rpc_send(rainRoutine dest, struct rainCtxMsg msg){
 	return RAIN_OK;
 }

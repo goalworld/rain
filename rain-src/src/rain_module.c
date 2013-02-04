@@ -17,39 +17,37 @@
 typedef struct rain_module_mgr_s
 {
 	char * path;
-	rain_module_t *module;
+	struct rainModule *module;
 	int caps;
 	int cut;
 
 }rain_module_mgr_t;
 static rain_module_mgr_t* MGR = NULL;
-struct rain_module_s
+struct rainModule
 {
 	void * _module;//模块指针
 	char name[255];
-	rain_init_fn _init;
-	rain_recv_fn _recvreq;
-	rain_recv_fn _recvres;
-	rain_destroy_fn _destroy;//模块导出的删除函数;
+	rainNewFn _init;
+	rainDeleteFn _destroy;//模块导出的删除函数;
 };
-static int _open(const char * mod_name,rain_module_t *pmod);
+static int _open(const char * mod_name,struct rainModule *pmod);
 static void* _tryopen(const char *mod_name);
 int
 rain_module_init(const char * mod_path)
 {
 	MGR = malloc(sizeof(rain_module_mgr_t));
-	MGR->module = malloc(sizeof(rain_module_t)*MGR_SET);
+	MGR->module = malloc(sizeof(struct rainModule)*MGR_SET);
 	MGR->caps = MGR_SET;
 	MGR->cut = 0;
 	MGR->path = strdup(mod_path);
 	return RAIN_OK;
 }
 const char*
-rain_module_name(rain_module_t *mod)
+rain_module_name(struct rainModule *mod)
 {
 	return mod->name;
 }
-rain_module_t *
+struct rainModule *
 rain_module_query(const char * mod_name)
 {
 	rain_module_mgr_t * mgr = MGR;
@@ -59,32 +57,32 @@ rain_module_query(const char * mod_name)
 			return &mgr->module[i];
 		}
 	}
-	rain_module_t mod;
+	struct rainModule mod;
 	int ret = _open(mod_name,&mod);
 	if(ret == RAIN_ERROR){
 		return NULL;
 	}
 	if(mgr->cut == mgr->caps){
 		int new_caps = 2*mgr->caps;
-		mgr->module = realloc(mgr->module,sizeof(rain_module_t)*new_caps);
+		mgr->module = realloc(mgr->module,sizeof(struct rainModule)*new_caps);
 	}
-	rain_module_t *pmod = &mgr->module[mgr->cut++];
+	struct rainModule *pmod = &mgr->module[mgr->cut++];
 	*pmod = mod;
 	return pmod;
 }
 void *
-rain_module_inst_init(rain_module_t *mod,rain_ctx_t *ctx,
+rain_module_inst_init(struct rainModule *mod,struct rainContext *ctx,
 		const char *args)
 {
 	return mod->_init(ctx,args);
 }
 void
-rain_module_inst_destroy(rain_module_t *mod,void *env,int code)
+rain_module_inst_destroy(struct rainModule *mod,void *env,int code)
 {
 	mod->_destroy(env,code);
 }
 static int
-_open(const char * mod_name,rain_module_t *pmod)
+_open(const char * mod_name,struct rainModule *pmod)
 {
 	void* dl = _tryopen(mod_name);
 	if(!dl){
@@ -92,22 +90,22 @@ _open(const char * mod_name,rain_module_t *pmod)
 	}
 	int sz1= strlen(mod_name),sz2;
 
-	sz2 = strlen("_init");
+	sz2 = strlen("_new");
 	char init_name[sz1+sz2+1];
 	memcpy(init_name ,mod_name,sz1);
-	memcpy(init_name+sz1,"_init",sz2);
+	memcpy(init_name+sz1,"_new",sz2);
 	init_name[sz1+sz2] = 0x00;
 
-	sz2 = strlen("_destroy");
+	sz2 = strlen("_delete");
 	char destroy_name[sz1+sz2+1];
 	memcpy(destroy_name,mod_name,sz1);
-	memcpy(destroy_name+sz1,"_destroy",sz2);
+	memcpy(destroy_name+sz1,"_delete",sz2);
 	destroy_name[sz1+sz2] = 0x00;
 
-	rain_init_fn mainfn = (rain_init_fn )( dlsym(dl,init_name) );
-	rain_destroy_fn delfn = ( rain_destroy_fn )( dlsym(dl,destroy_name) );
+	rainNewFn mainfn = (rainNewFn )( dlsym(dl,init_name) );
+	rainDeleteFn delfn = ( rainDeleteFn )( dlsym(dl,destroy_name) );
 	if( !delfn || !mainfn ){
-		RAIN_LOG(0,"ERROR:dlsym init:%p,destroy:%p",mainfn,delfn);
+		RAIN_LOG(0,"ERROR:dlsym _new:%p,_delete:%p",mainfn,delfn);
 		dlclose(dl);
 		return RAIN_ERROR;
 	}

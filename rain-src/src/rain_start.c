@@ -14,7 +14,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <string.h>
-#include "rain_ctx.h"
+#include "rain_context.h"
 #include "rain_lifequeue.h"
 #include "rain_timer.h"
 #include "rain_module.h"
@@ -30,19 +30,19 @@ int
 main(int argc,char *argv[])
 {
 	assert(argc >=3);
-	rain_loger_init();
-	rain_ctx_init(154);
+	rainLogInit();
+	rainContextInit(154);
 	char *dir = malloc(1024);
 	getcwd(dir,1024);
 	strcat(dir,"/routine/");
 	//printf("dir:%s %s %s %s\n",dir,argv[0],argv[1],argv[2]);
 	rain_module_init(dir);
 	free(dir);
-	rain_timer_init();
+	rainTimerInit();
 	rain_rpc_init();
-	rain_lifequeue_int();
+	rainLifeQueueInit();
 	sig_init();
-	rain_ctx_t * ctx = rain_ctx_new(0,argv[1],argv[2]);
+	struct rainContext * ctx = rainContextNew(0,argv[1],argv[2]);
 	if(ctx == NULL){
 		exit(-1);
 	}
@@ -72,15 +72,15 @@ sig_init(void)
 static int
 rain_dispatch_routine(void)
 {
-	routine_t rid;
-	int ret = rain_lifequeue_pop(&rid);
+	rainRoutine rid;
+	int ret = rainLifeQueuePop(&rid);
 	if(ret == RAIN_OK){
-		rain_ctx_t * ctx = rain_ctx_handle_query(rid,false);
+		struct rainContext * ctx = rainHandleQuery(rid,false);
 		if(ctx){
-			ret = rain_ctx_run(ctx);
-			rain_ctx_unref(ctx);
+			ret = rainContextRun(ctx);
+			rainContextUnRef(ctx);
 			if(ret == RAIN_OK){
-				rain_lifequeue_push(rid);
+				rainLifeQueuePush(rid);
 			}
 		}else{
 			RAIN_LOG(0,"UNKNOW CTX %x\n",rid);
@@ -95,7 +95,7 @@ worker(void *arg)
 	pthread_detach(pthread_self());
 	for(;;){
 		if(RAIN_ERROR == rain_dispatch_routine()){
-			rain_sleep(1E-1);
+			rainSleep(1E-1);
 		}
 	}
 	return (void *)(0);
@@ -104,8 +104,8 @@ static void *
 evloop(void *arg)
 {
 	for(;;){
-		rain_timer_loop();
-		rain_sleep(1E-1);
+		rainTimerLoop();
+		rainSleep(1E-1);
 	}
 	return (void *)(0);
 }

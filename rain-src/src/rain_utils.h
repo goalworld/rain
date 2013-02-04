@@ -8,6 +8,6 @@
 #ifndef RAIN_UTILS_H_
 #define RAIN_UTILS_H_
 
-void  rain_sleep(double time);
-double rain_time();
+void  rainSleep(double time);
+double rainGetTime();
 #endif /* RAIN_UTILS_H_ */

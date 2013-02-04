@@ -8,7 +8,7 @@
 #ifndef RAIN_LIFEQUEUE_H_
 #define RAIN_LIFEQUEUE_H_
 #include "rain_type.h"
-int rain_lifequeue_int();
-void rain_lifequeue_push(routine_t rid);
-int rain_lifequeue_pop(routine_t *rid);
+int rainLifeQueueInit();
+void rainLifeQueuePush(rainRoutine rid);
+int rainLifeQueuePop(rainRoutine *rid);
 #endif /* RAIN_LIFEQUEUE_H_ */

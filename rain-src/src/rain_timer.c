@@ -5,44 +5,44 @@
  *      Author: goalworld
  */
 #include "rain.h"
-#include "rain_ctx.h"
+#include "rain_context.h"
 #include "rain_timer.h"
 #include <stdlib.h>
 #include "rain_mutex.h"
 #include "rain_utils.h"
-typedef struct rain_timer_s
+struct rainTimer
 {
-	routine_t ctx_id;
+	rainRoutine ctx_id;
 	void* user_data;
 	//rain_ctx_t * ctx;
 	double timeout;
 	double now;
 	double lefttime;
 	struct rain_timer_s * next;
-}rain_timer_t;
+};
 static void
-_pending_times(rain_timer_t* timer)
+_pending_times(struct rainTimer* timer)
 {
-	rain_ctxmsg_t msg;
+	struct rainCtxMsg msg;
 	msg.type = RAIN_MSG_TIMER;
 	msg.u_data.time_data = timer->user_data;
 	//msg.u_data.time_data = timer->ext_data;
-	rain_ctx_handle_pushmsg(timer->ctx_id,msg);
+	rainHandlePushMsg(timer->ctx_id,msg);
 	//rain_ctx_pushmsg(timer->ctx,msg);
 }
 
 typedef struct rain_timermgr_s
 {
-	rain_timer_t * head;
-	rain_timer_t * runhead;
+	struct rainTimer * head;
+	struct rainTimer * runhead;
 	double min;
-	rain_mutex_t mtx;
+	rainMutex mtx;
 }rain_timermgr_t;
 
 static rain_timermgr_t mgr;
 
 int
-rain_timer_init()
+rainTimerInit()
 {
 	mgr.head = NULL;
 	rain_mutex_init(&mgr.mtx);
@@ -58,13 +58,13 @@ _test_swap(double newTime)
 	}
 }
 void
-rain_timer_loop()
+rainTimerLoop()
 {
 	for(;;){
-		rain_timer_t* pre = NULL;
-		rain_timer_t* tmp = mgr.runhead;
+		struct rainTimer* pre = NULL;
+		struct rainTimer* tmp = mgr.runhead;
 		while(tmp){
-			double now = rain_time();
+			double now = rainGetTime();
 			tmp->timeout -= (now-tmp->now);
 			tmp->now = now;
 			if(tmp->timeout <= 0.0){
@@ -74,7 +74,7 @@ rain_timer_loop()
 				}else{
 					mgr.runhead = tmp->next;
 				}
-				rain_timer_t *tf = tmp;
+				struct rainTimer *tf = tmp;
 				tmp = tmp->next;
 				free(tf);
 				continue;
@@ -96,20 +96,20 @@ rain_timer_loop()
 			mgr.head = NULL;
 			rain_mutex_unlock(&mgr.mtx);
 		}
-		rain_sleep(mgr.min);
+		rainSleep(mgr.min);
 	}
 }
 int
-rain_timeout(rain_ctx_t *ctx,double timeout,void *user_data)
+rainTimeout(struct rainContext *ctx,double timeout,void *user_data)
 {
 	if(!ctx || timeout<=0.0 ){
 		return RAIN_ERROR;
 	}
-	rain_timer_t * p = malloc(sizeof(rain_timer_t));
-	p->ctx_id = rain_routineid(ctx);
+	struct rainTimer * p = malloc(sizeof(struct rainTimer));
+	p->ctx_id = rainRoutineId(ctx);
 	p->user_data = user_data;
 	p->timeout = timeout;
-	p->now = rain_time();
+	p->now = rainGetTime();
 	//p->ctx = ctx;
 	rain_mutex_lock(&mgr.mtx);
 	p->next = mgr.head;

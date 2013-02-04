@@ -14,7 +14,7 @@
 #include <pthread.h>
 #endif
 #define VEC_SIZE  64
-typedef struct rain_lq_s
+typedef struct rainLifeQueue
 {
 	rain_queue_t r_queue;
 	//
@@ -22,56 +22,56 @@ typedef struct rain_lq_s
 	pthread_mutex_t mtx;
 	pthread_cond_t con;
 #else
-	int mtx;
+	rainMutex mtx;
 #endif
-}rain_lq_t;
-static rain_lq_t * LQ = NULL;
+};
+static struct rainLifeQueue * LQ = NULL;
 
 int
-rain_lifequeue_int()
+rainLifeQueueInit()
 {
-	LQ = malloc(sizeof(rain_lq_t));
+	LQ = malloc(sizeof(struct rainLifeQueue));
 #ifdef PTHREAD_LOCK
 	pthread_mutex_init(&LQ->mtx,NULL);
 	pthread_cond_init(&LQ->con,NULL);
 #else
-	rain_mutex_init(&LQ->mtx);
+	rainMutexInit(&LQ->mtx);
 #endif
-	return rain_queue_init(&LQ->r_queue,sizeof(routine_t));
+	return rain_queue_init(&LQ->r_queue,sizeof(rainRoutine));
 }
 void
-rain_lifequeue_push(routine_t rid)
+rainLifeQueuePush(rainRoutine rid)
 {
-	rain_lq_t* lq = LQ;
+	struct rainLifeQueue* lq = LQ;
 #ifdef PTHREAD_LOCK
 	pthread_mutex_lock(&lq->mtx);
 #else
-	rain_mutex_lock(&lq->mtx);
+	rainMutextLock(&lq->mtx);
 #endif
 	rain_queue_push(&lq->r_queue,&rid);
 #ifdef PTHREAD_LOCK
 	pthread_cond_signal(&lq->con);
 	pthread_mutex_unlock(&lq->mtx);
 #else
-	rain_mutex_unlock(&lq->mtx);
+	rainMutextUnLock(&lq->mtx);
 #endif
 }
 int
-rain_lifequeue_pop(routine_t *rid)
+rainLifeQueuePop(rainRoutine *rid)
 {
 	assert(rid);
-	rain_lq_t* lq = LQ;
+	struct rainLifeQueue* lq = LQ;
 #ifdef PTHREAD_LOCK
 	pthread_mutex_lock(&lq->mtx);
 #else
-	rain_mutex_lock(&lq->mtx);
+	rainMutextLock(&lq->mtx);
 #endif
 	if( rain_queue_pop(&lq->r_queue,rid) != 0){
 #ifdef PTHREAD_LOCK
 		pthread_cond_wait(&lq->con,&lq->mtx);
 		pthread_mutex_unlock(&lq->mtx);
 #else
-		rain_mutex_unlock(&lq->mtx);
+		rainMutextUnLock(&lq->mtx);
 #endif
 		return RAIN_ERROR;
 	}

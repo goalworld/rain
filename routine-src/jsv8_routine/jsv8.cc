@@ -96,19 +96,19 @@ ReportException(TryCatch &try_catch, bool show_line)
 	fflush(stderr);
 }
 void
-jsv8_t::_link(void *env,routine_t exit,int code)
+jsv8_t::_link(void *env,rainRoutine exit,int code)
 {
 	jsv8_t * js = (jsv8_t *)env;
 	js->Link(exit,code);
 }
 void
-jsv8_t::_recv(void *env,routine_t src,rain_msg_t msg,session_t session)
+jsv8_t::_recv(void *env,rainRoutine src,struct rainMsg msg,rainSession session)
 {
 	jsv8_t * js = (jsv8_t *)env;
 	js->Recv(src,msg,session);
 }
 void
-jsv8_t::_recv_rsp(void *env,routine_t src,rain_msg_t msg,session_t session)
+jsv8_t::_recv_rsp(void *env,rainRoutine src,struct rainMsg msg,rainSession session)
 {
 	jsv8_t * js = (jsv8_t *)env;
 	js->RecvResponce(src,msg,session);
@@ -263,7 +263,7 @@ jsv8_t::SteupRoutine(const std::string & args)
 			String::New(RAIN_VERSION)) ;
 	foo_class_obj->Set(String::NewSymbol("platform"),
 			String::New("linux"));
-	routine_t rid = rain_routineid(this->ctx_);
+	rainRoutine rid = rainRoutineId(this->ctx_);
 	foo_class_obj->Set(String::NewSymbol("rid"),
 			Integer::New(rid));
 	foo_class_obj->Set(String::NewSymbol("parent"),
@@ -273,7 +273,7 @@ jsv8_t::SteupRoutine(const std::string & args)
 
 
 bool
-jsv8_t::Initialize(rain_ctx_t *ctx,const std::string & args)
+jsv8_t::Initialize(struct rainContext *ctx,const std::string & args)
 {
 	this->ctx_ = ctx;
 	{
@@ -312,7 +312,7 @@ jsv8_t::Initialize(rain_ctx_t *ctx,const std::string & args)
 		this->start_ = Persistent<Function>::New(Handle<Function>::Cast(f_value));
 	}
 	RAIN_CALLBACK(ctx,jsv8_t::_recv,jsv8_t::_recv_rsp,jsv8_t::_link,jsv8_t::_time_out,jsv8_t::_next_tick);
-	rain_next_tick(ctx,NULL);
+	rainNextTick(ctx,NULL);
 	return true;
 }
 int
@@ -323,7 +323,7 @@ jsv8_t::Run()
 	HandleScope socpe;
 	Context::Scope c_scope(this->v8ctx_);
 	bStart = true;
-	routine_t parent =rain_parent_routineid(this->ctx_);
+	rainRoutine parent =rainPRoutineId(this->ctx_);
 	jsv8_ctx_t * p = new jsv8_ctx_t(this->ctx_,parent);
 	this->relates_[parent] = p;
 	this->parent_  =  Persistent<Value>::New( jsv8_ctx_t::Register(p));
@@ -348,7 +348,7 @@ jsv8_t::_next_tick(void *arg,void *userdata)
 {
 	jsv8_t * js = (jsv8_t *)arg;
 	if( js->Run() == RAIN_ERROR){
-		rain_exit(js->ctx_,1);
+		rainExit(js->ctx_,1);
 	}
 }
 void
@@ -366,11 +366,11 @@ jsv8_t::_time_out(void *arg,void *userdata)
 			iter->second.cb_->Call(js->v8ctx_->Global(),0,NULL);
 		}
 		if(iter->second.repeat_ == -1){
-			rain_timeout(js->ctx_,iter->second.times_,(void *)(ptrdiff_t)(id));
+			rainTimeout(js->ctx_,iter->second.times_,(void *)(ptrdiff_t)(id));
 			return;
 		}
 		if(--iter->second.repeat_ >= 0){
-			rain_timeout(js->ctx_,iter->second.times_,(void *)(ptrdiff_t)(id));
+			rainTimeout(js->ctx_,iter->second.times_,(void *)(ptrdiff_t)(id));
 		}else{
 			iter->second.cb_.Dispose(js->solt_);
 			js->timers_.erase(iter);
@@ -379,7 +379,7 @@ jsv8_t::_time_out(void *arg,void *userdata)
 	}
 }
 void
-jsv8_t::Recv(routine_t src,rain_msg_t msg,session_t session)
+jsv8_t::Recv(rainRoutine src,struct rainMsg msg,rainSession session)
 {
 	Locker lock(this->solt_);
 	Isolate::Scope isocpe(this->solt_);
@@ -400,7 +400,7 @@ jsv8_t::Recv(routine_t src,rain_msg_t msg,session_t session)
 			jsct->recv_cb->Call(this->v8ctx_->Global(),num_arg,argc);
 		}
 	}else{
-		if(src == rain_parent_routineid(this->ctx_)){
+		if(src == rainPRoutineId(this->ctx_)){
 			jsv8_ctx_t * p = new jsv8_ctx_t(this->ctx_,src);
 			this->relates_[src] = p;
 			const int num_arg = 2;
@@ -419,7 +419,7 @@ jsv8_t::Recv(routine_t src,rain_msg_t msg,session_t session)
 	free(msg.data);
 }
 void
-jsv8_t::Link(routine_t exit,int code)
+jsv8_t::Link(rainRoutine exit,int code)
 {
 	jsv8_t::RelationMapIter iter = this->relates_.find(exit);
 	if( iter  != this->relates_.end()){
@@ -439,7 +439,7 @@ jsv8_t::Link(routine_t exit,int code)
 	}
 }
 void
-jsv8_t::RecvResponce(routine_t src,rain_msg_t msg,session_t session)
+jsv8_t::RecvResponce(rainRoutine src,struct rainMsg msg,rainSession session)
 {
 	if( this->relates_.find(src) != this->relates_.end()){
 		jsv8_ctx_t* jsct =  this->relates_[src];
@@ -476,7 +476,7 @@ jsv8_t::Spawn(const v8::Arguments& args)
 	v8::HandleScope scope;
 	v8::String::Utf8Value file(args[0]);
 	v8::String::Utf8Value rain_arg(args[1]);
-	routine_t rd;
+	rainRoutine rd;
 	jsv8_t * js = get_cppobj_ptr<jsv8_t>(args.Holder());
 	if( rain_spawn(js->ctx_,*file,*rain_arg,&rd) ==RAIN_OK){
 		jsv8_ctx_t * p = new jsv8_ctx_t(js->ctx_,rd);
@@ -525,7 +525,7 @@ jsv8_t::Exit(const v8::Arguments& args)
 	if(args.Length() >= 1){
 		code = v8::Handle<Integer>::Cast(args[0])->Value();
 	}
-	rain_exit(js->ctx_,code);
+	rainExit(js->ctx_,code);
 	return v8::Undefined();
 }
 v8::Handle<v8::Value>
@@ -543,7 +543,7 @@ jsv8_t::Timer(const v8::Arguments& args)
 	timr.times_ = v8::Handle<Number>::Cast(args[1])->Value();
 	timr.cb_ =v8::Persistent<Function>::New(v8::Handle<Function>::Cast(args[0]));
 	js->timers_[id]=timr;
-	rain_timeout(js->ctx_,timr.times_,(void *)(ptrdiff_t)(id));
+	rainTimeout(js->ctx_,timr.times_,(void *)(ptrdiff_t)(id));
 	return scope.Close(Integer::New(id));
 }
 /*v8::Handle<v8::Value> jsv8_t::ClearTimeout(const v8::Arguments& args){

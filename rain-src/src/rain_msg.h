@@ -16,8 +16,8 @@ enum{
 	RAIN_MSG_EXIT	=	0X100000,
 };
 
-typedef struct rain_ctxmsg_s{
-	routine_t src;
+typedef struct rainCtxMsg{
+	rainRoutine src;
 	union{
 		void *msg;
 		void *tick_data;
@@ -30,7 +30,7 @@ typedef struct rain_ctxmsg_s{
 		int exitcode;
 	}u_sz;
 	int type;
-	session_t session;
-}rain_ctxmsg_t;
+	rainSession session;
+};
 
 #endif /* RAIN_MSG_H_ */

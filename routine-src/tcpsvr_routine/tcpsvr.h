@@ -37,14 +37,14 @@ typedef struct tcpsvr_s
 {
 	int fd;
 	ev_io listen_ev;
-	rain_ctx_t * ctx;
+	struct rainContext * ctx;
 	char *args;
 	tcpclient_t clients[TCPSVR_MAX_CONNECT];
 	int num_cli;
 	int cut_index;
 	struct ev_loop * loop;
 	double pre_loop_time;
-	routine_t watchdog;
+	rainRoutine watchdog;
 	int headsz;
 	long all_recv;
 	ev_timer timer;

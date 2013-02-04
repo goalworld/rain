@@ -11,10 +11,10 @@
 #define RAIN_LOG(level,fmt,...)\
 		do{\
 			if(level <= LOG_LEVEL){\
-				rain_loger_error(__FILE__,__LINE__,fmt,__VA_ARGS__);	\
+				rainLogError(__FILE__,__LINE__,fmt,__VA_ARGS__);	\
 			}						      \
 		}while(0)
-int rain_loger_init();
-void rain_loger_error(const char *filename,int line,const char *fmt,...);
+int rainLogInit();
+void rainLogError(const char *filename,int line,const char *fmt,...);
 
 #endif /* RAIN_LOGER_H_ */

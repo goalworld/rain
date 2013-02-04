@@ -9,7 +9,7 @@
 #include <sys/time.h>
 
 void
-rain_sleep(double delay)
+rainSleep(double delay)
 {
 	struct timeval tv;
 	tv.tv_sec  = (time_t)delay;
@@ -17,7 +17,7 @@ rain_sleep(double delay)
 	select (0, 0, 0, 0, &tv);
 }
  double
-rain_time()
+rainGetTime()
 {
 	struct timeval time;
 	gettimeofday(&time,(void *)0);

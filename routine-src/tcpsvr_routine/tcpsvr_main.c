@@ -22,10 +22,10 @@ typedef struct tcp_cmd_s{
 	int id;
 	int cmd;
 }tcp_cmd_t;
-static void _recv(void *arg,routine_t src,rain_msg_t msg,session_t session);
-static void _recv_rps(void *arg,routine_t src,rain_msg_t msg,session_t session);
+static void _recv(void *arg,rainRoutine src,struct rainMsg msg,rainSession session);
+static void _recv_rps(void *arg,rainRoutine src,struct rainMsg msg,rainSession session);
 static void _next_tick(void *env,void *user_data);
-static void _link_exit(void *env,routine_t exitid,int code);
+static void _link_exit(void *env,rainRoutine exitid,int code);
 static void _svr_next_tick(tcpsvr_t * svr);
 //static void _timercb(struct ev_loop * loop, ev_timer *w, int revents);
 void
@@ -45,7 +45,7 @@ tcpsvr_destroy(void *env,int code)
 	free(svr);
 }
 void *
-tcpsvr_init(rain_ctx_t*ctx,char *args)
+tcpsvr_init(struct rainContext*ctx,char *args)
 {
 	tcpsvr_t * svr = malloc(sizeof(tcpsvr_t));
 	svr->fd = -1;
@@ -58,7 +58,7 @@ tcpsvr_init(rain_ctx_t*ctx,char *args)
 	svr->ctx = ctx;
 	char host[64];
 	int port;
-	routine_t rids;
+	rainRoutine rids;
 	char *tmp = strdup(args);
 	char * token;
 	int flag = EVFLAG_AUTO;
@@ -115,17 +115,17 @@ tcpsvr_init(rain_ctx_t*ctx,char *args)
 	//ev_timer_init(&svr->timer,_timercb,1.0,1.0);
 	//svr->timer.data = svr;
 	//ev_timer_start(svr->loop,&svr->timer);
-	rain_next_tick(ctx,_svr_next_tick);
-	rain_link(ctx,svr->watchdog);
+	rainNextTick(ctx,_svr_next_tick);
+	rainLink(ctx,svr->watchdog);
 	//rain_debug(svr->ctx,"<TCP-SERVER>: At(%s:%d),watcher:%d,mode:%s",host,port,rids,modbuf);
 	return svr;
 }
 static void
-_link_exit(void *env,routine_t exitid,int code)
+_link_exit(void *env,rainRoutine exitid,int code)
 {
 	tcpsvr_t * svr = (tcpsvr_t *)env;
 	if(exitid == svr->watchdog){
-		rain_exit(svr->ctx,0);
+		rainExit(svr->ctx,0);
 	}
 }
 /*
@@ -153,12 +153,12 @@ static void
 _svr_next_tick(tcpsvr_t * svr)
 {
 	if( tcpsvr_run(svr) == RAIN_OK){
-		rain_next_tick(svr->ctx,_svr_next_tick);
+		rainNextTick(svr->ctx,_svr_next_tick);
 	}
 }
 
 static void
-_recv(void *env,routine_t src,rain_msg_t msg,session_t session)
+_recv(void *env,rainRoutine src,struct rainMsg msg,rainSession session)
 {
 	tcpsvr_t * svr = (tcpsvr_t *)env;
 	tcp_cmd_t * p = (tcp_cmd_t *)(msg.data);
@@ -174,13 +174,13 @@ _recv(void *env,routine_t src,rain_msg_t msg,session_t session)
 		}
 	}else if(session != RAIN_INVALID_SESSION){
 		char buf[]="error_cmd";
-		rain_msg_t tmpmsg={buf,sizeof(buf),-1};
-		rain_responce(svr->ctx,src,tmpmsg,RAIN_COPY,session);
+		struct rainMsg tmpmsg={buf,sizeof(buf),-1};
+		rainResponce(svr->ctx,src,tmpmsg,RAIN_COPY,session);
 	}
 	free(msg.data);
 }
 static void
-_recv_rps(void *env,routine_t src,rain_msg_t msg,session_t session)
+_recv_rps(void *env,rainRoutine src,struct rainMsg msg,rainSession session)
 {
 	free(msg.data);
 }

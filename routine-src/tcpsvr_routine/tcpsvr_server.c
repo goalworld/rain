@@ -159,41 +159,41 @@ enum
 void
 tcpsvr_notifyconnect(tcpsvr_t * svr,tcpclient_t * cli)
 {
-	rain_msg_t msg;
+	struct rainMsg msg;
 	msg.data = &cli->id;
 	msg.sz = sizeof(cli->id);
 	msg.type = CONNECT;
-	rain_send(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
+	rainSend(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
 }
 void
 tcpsvr_notifyread(tcpsvr_t * svr,tcpclient_t * cli ,void *buf,int sz)
 {
 	svr->all_recv += sz-4;
-	rain_msg_t msg;
+	struct rainMsg msg;
 	msg.data = buf;
 	msg.sz = sz;
 	msg.type = MESSAGE;
-	rain_send(svr->ctx,svr->watchdog,msg,RAIN_NOCOPY,NULL);
+	rainSend(svr->ctx,svr->watchdog,msg,RAIN_NOCOPY,NULL);
 }
 void
 tcpsvr_notifyclose(tcpsvr_t * svr,tcpclient_t * cli)
 {
-	rain_msg_t msg;
+	struct rainMsg msg;
 	msg.data = &cli->id;
 	msg.sz = sizeof(cli->id);
 	msg.type = CLOSE;
-	rain_send(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
+	rainSend(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
 	tcpclient_destroy(cli);
 }
 void
 tcpsvr_notifyerror(tcpsvr_t *svr,tcpclient_t *cli)
 {
 	svr->num_cli -- ;
-	rain_msg_t msg;
+	struct rainMsg msg;
 	msg.data = &cli->id;
 	msg.sz = sizeof(cli->id);
 	msg.type = ERROR;
-	rain_send(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
+	rainSend(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
 	svr->num_cli -- ;
 	cli->binuse = false;
 }

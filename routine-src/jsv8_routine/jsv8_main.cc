@@ -16,7 +16,7 @@ using namespace v8;
 extern "C"{
 
 void *
-jsv8_init(rain_ctx_t *ctx,const char *args)
+jsv8New(struct rainContext *ctx,const char *args)
 {
 	jsv8_t * js = new jsv8_t();
 	if( js->Initialize(ctx,args) ){
@@ -28,7 +28,7 @@ jsv8_init(rain_ctx_t *ctx,const char *args)
 
 }
 void
-jsv8_destroy(void *env,int code)
+jsv8Delete(void *env,int code)
 {
 	jsv8_t * js = (jsv8_t *)env;
 	js->Exit(code);
