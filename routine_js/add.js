@@ -2,13 +2,13 @@
 function main()
 {
 	routine.On("message",function (src,msg){
-		console.log("sdf");
+		print("sdf");
 	});
 	routine.On("exit",function (code){
-		console.log("[ADD]-SELF-EXIT",code);
+		print("[ADD]-SELF-EXIT",code);
 	});
 	routine.parent.On("message",function (msg){
-		console.log('[ADD]-PARENT-MESSAGE',msg);
+		print('[ADD]-PARENT-MESSAGE',msg);
 		var data = JSON.parse(msg.data);
 		var ret = data.a+data.b;
 		if(msg.session){
@@ -16,7 +16,7 @@ function main()
 		}
 	});
 	routine.parent.On("exit",function(code){
-		console.log("[ADD]-PARENT-EXIT",code);
+		print("[ADD]-PARENT-EXIT",code);
 	});
 	//startTcpSvr("127.0.0.1",8194,'epoll',routine.rid,2);
 }
@@ -37,25 +37,25 @@ function startTcpSvr(ip,port,mode,watchdog,headsz){
 		var num=0;
 		tcpSvr.On("message",function(msg){
 			if(msg.type == TCP_MSG_TYPE.CONNECT){
-				console.log("tcpSvr-Msg",port,"new_connect",++num);
+				print("tcpSvr-Msg",port,"new_connect",++num);
 			}else if(msg.type == TCP_MSG_TYPE.MESSAGE){
-				console.log("tcpSvr-Msg",msg,msg.data.length-4,num_pkt++);
+				print("tcpSvr-Msg",msg,msg.data.length-4,num_pkt++);
 				var str = msg.data;
 				size+=msg.data.length-4;
 				num_pkt++
 			}else if(msg.type == TCP_MSG_TYPE.CLOSE){
-				console.log("tcpSvr-Msg",port,"connect_close",--num);	
-				console.log("tcpSvr-ALL-INFO",num_pkt,size);
+				print("tcpSvr-Msg",port,"connect_close",--num);	
+				print("tcpSvr-ALL-INFO",num_pkt,size);
 			}else{
-				console.log("unknow info");
+				print("unknow info");
 			}
 		});
 		tcpSvr.On("exit",function(code){
-			console.log("tcpSvr,exit",code);
+			print("tcpSvr,exit",code);
 		 });
 		var i = 0;
 	}else{
-		console.log("tcp-svr-launch failed");
+		print("tcp-svr-launch failed");
 		throw new Error("tcp-svr-lanuch-failed");
 	}
 }
