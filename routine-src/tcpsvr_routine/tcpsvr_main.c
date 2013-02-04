@@ -31,6 +31,9 @@ static void _svr_next_tick(tcpsvr_t * svr);
 void
 tcpsvrDelete(void *env,int code)
 {
+	if( !env ){
+		return;
+	}
 	tcpsvr_t * svr = (tcpsvr_t *)env;
 	int i=0;
 	for(;i<TCPSVR_MAX_CONNECT;i++){

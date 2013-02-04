@@ -31,7 +31,7 @@ testNew(struct rainContext *ctx,char *args)
 	rainDebug(tt->ctx,"TestRunning,arguments:%s",args);
 	fflush(stdout);
 	int ret = 0;
-	sprintf(arg,"ip=%s&port=%d&watchdog=%d&mode=%s","127.0.0.1",8100,rainRoutineId(ctx),"epoll");
+	sprintf(arg,"ip=%s&port=%d&watchdog=%d&mode=%sheadsz=%d","127.0.0.1",8100,rainRoutineId(ctx),"epoll",4);
 	ret = rainSpawn(ctx,"tcpsvr",arg,&(tt->tcpsvr_id));
 	if(ret == RAIN_ERROR){
 		free(tt);
