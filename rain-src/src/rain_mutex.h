@@ -12,8 +12,8 @@
 typedef int rainMutex;
 
 #define rainMutexInit( mtx )	*(mtx) = 0;
-#define rainMutextLock( mtx )	while(__sync_lock_test_and_set((mtx),1)){;}
-#define rainMutextUnLock( mtx )__sync_lock_release ((mtx),0);
+#define rainMutexLock( mtx )	while(__sync_lock_test_and_set((mtx),1)){;}
+#define rainMutexUnLock( mtx )__sync_lock_release ((mtx),0);
 
 
 #endif
