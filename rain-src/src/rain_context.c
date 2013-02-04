@@ -27,15 +27,15 @@ hash_func(int handle)
 #define LOCAL_ID(rid) ((rid)&0x0000ffff)
 #define CREATE_ID(rainid,localid)((rainid)<<16|((localid)&0x0000ffff))
 #define IS_FULL(h) (((h)->num_used) == CTX_SET)
-typedef struct rain_handle_s
+struct rainHandle
 {
 	int rainid;
 	rainMutex mtx;
 	int num_used;
 	struct rainContext * ppctx[CTX_SET];
 	int cut_index;
-}rain_handle_t;
-static  rain_handle_t * H = NULL;
+};
+static  struct rainHandle * H = NULL;
 struct rainContext
 {
 	rain_queue_t mq;
@@ -82,9 +82,9 @@ _time_exit()
 int
 rainContextInit(int rainid)
 {
-	H = malloc(sizeof(rain_handle_t));
+	H = malloc(sizeof(struct rainHandle));
 	assert(H);
-	rain_handle_t* h = H;
+	struct rainHandle* h = H;
 	memset(h->ppctx,0,sizeof(void *)*CTX_SET);
 	h->num_used = 0;
 	rainMutexInit(&h->mtx);
@@ -97,7 +97,7 @@ static void
 _ctx_genid(struct rainContext *ctx)
 {
 	assert(!IS_FULL(H));
-	rain_handle_t* h = H;
+	struct rainHandle* h = H;
 	rainMutexLock(&h->mtx);
 	int hash;
 	for(;;){
@@ -308,7 +308,7 @@ rainHandleLocal(rainRoutine rid)
 struct rainContext *
 rainHandleQuery(rainRoutine rid,bool blog)
 {
-	rain_handle_t* h = H;
+	struct rainHandle* h = H;
 	if(h->rainid != RAIN_ID(rid)){
 		if(blog){
 			RAIN_LOG(0,"HANDLE_QUERY_FAILED：not local rid,rid:%x",rid);
@@ -340,7 +340,7 @@ rainContextUnRef(struct rainContext *ctx)
 {
 	if(__sync_sub_and_fetch(&ctx->ref,1) == 0){
 		int hash = hash_func(LOCAL_ID(ctx->rid));
-		rain_handle_t* h = H;
+		struct rainHandle* h = H;
 		rainMutexLock(&h->mtx);
 		_unregist_handle(hash);
 		rainMutexUnLock(&h->mtx);
@@ -382,7 +382,7 @@ _ctx_destroy(struct rainContext *ctx)
 int
 rainHandleKill(rainRoutine rid,int code)
 {
-	rain_handle_t* h = H;
+	struct rainHandle* h = H;
 	int hash = hash_func(LOCAL_ID(rid));
 	if( hash >= CTX_SET){
 		return RAIN_ERROR;

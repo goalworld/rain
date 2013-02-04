@@ -14,7 +14,7 @@
 #include <pthread.h>
 #endif
 #define VEC_SIZE  64
-typedef struct rainLifeQueue
+struct rainLifeQueue
 {
 	rain_queue_t r_queue;
 	//
