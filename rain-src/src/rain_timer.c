@@ -45,7 +45,7 @@ int
 rainTimerInit()
 {
 	mgr.head = NULL;
-	rain_mutex_init(&mgr.mtx);
+	rainMutexInit(&mgr.mtx);
 	mgr.runhead = NULL;
 	mgr.min = 1.0;
 	return RAIN_OK;
@@ -79,22 +79,22 @@ rainTimerLoop()
 				free(tf);
 				continue;
 			}else{
-				rain_mutex_lock(&mgr.mtx);
+				rainMutexLock(&mgr.mtx);
 				_test_swap(tmp->timeout);
-				rain_mutex_unlock(&mgr.mtx);
+				rainMutexUnLock(&mgr.mtx);
 			}
 			pre = tmp;
 			tmp = tmp->next;
 		}
 		if(mgr.head){
-			rain_mutex_lock(&mgr.mtx);
+			rainMutexLock(&mgr.mtx);
 			if(pre){
 				pre->next = mgr.head;
 			}else{
 				mgr.runhead = mgr.head;
 			}
 			mgr.head = NULL;
-			rain_mutex_unlock(&mgr.mtx);
+			rainMutexUnLock(&mgr.mtx);
 		}
 		rainSleep(mgr.min);
 	}
@@ -111,11 +111,11 @@ rainTimeout(struct rainContext *ctx,double timeout,void *user_data)
 	p->timeout = timeout;
 	p->now = rainGetTime();
 	//p->ctx = ctx;
-	rain_mutex_lock(&mgr.mtx);
+	rainMutexLock(&mgr.mtx);
 	p->next = mgr.head;
 	mgr.head = p;
 	_test_swap(timeout);
-	rain_mutex_unlock(&mgr.mtx);
+	rainMutexUnLock(&mgr.mtx);
 	return RAIN_OK;
 }
 
