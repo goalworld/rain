@@ -198,7 +198,8 @@ jsv8_t::jsv8_t()
 	this->timeid_ = 0;
 }
 void
-jsv8_t::Exit(int code){
+jsv8_t::Exit(int code)
+{
 	if(!this->exit_.IsEmpty()){
 		Locker lock(this->solt_);
 		Isolate::Scope isocpe(this->solt_);
@@ -251,14 +252,8 @@ jsv8_t::SteupRoutine(const std::string & args)
 			v8::FunctionTemplate::New(jsv8_t::Spawn)->GetFunction()) ;
 	foo_class_obj->Set(v8::String::New("Exit"),
 			v8::FunctionTemplate::New(jsv8_t::Exit)->GetFunction()) ;
-	/*foo_class_obj->Set(v8::String::New("Send"),
-				v8::FunctionTemplate::New(jsv8_t::Send)->GetFunction()) ;
-	foo_class_obj->Set(v8::String::New("Responce"),
-					v8::FunctionTemplate::New(jsv8_t::Responce)->GetFunction()) ;*/
 	foo_class_obj->Set(v8::String::New("Timer"),
 			v8::FunctionTemplate::New(jsv8_t::Timer)->GetFunction()) ;
-	//	foo_class_obj->Set(v8::String::New("Rg"),
-	//			v8::FunctionTemplate::New(jsv8_t::AddId)->GetFunction()) ;
 	foo_class_obj->Set(v8::String::New("version"),
 			String::New(RAIN_VERSION)) ;
 	foo_class_obj->Set(String::NewSymbol("platform"),
@@ -289,17 +284,13 @@ jsv8_t::Initialize(struct rainContext *ctx,const std::string & args)
 		this->v8ctx_ = Context::New(NULL,global);
 		Context::Scope c_scope(this->v8ctx_);
 		TryCatch try_catch;
-
-
-		std::string file("/home/wd/rain/routine_js/");
-		file+=args;
+		
 		std::string source;
-		if(!ReadFile(file,source)){
+		if(!ReadFile(args,source)){
 			return false;
 		}
 
 		source = "(function(routine){"+source+"})";
-		//std::cout << source << std::endl;
 		Handle<Script> script = Script::Compile(
 				String::New(source.c_str(),source.length()),
 				String::New(file.c_str(),file.length())
