@@ -29,7 +29,7 @@ static void _link_exit(void *env,rainRoutine exitid,int code);
 static void _svr_next_tick(tcpsvr_t * svr);
 //static void _timercb(struct ev_loop * loop, ev_timer *w, int revents);
 void
-tcpsvr_destroy(void *env,int code)
+tcpsvrDestroy(void *env,int code)
 {
 	tcpsvr_t * svr = (tcpsvr_t *)env;
 	int i=0;
@@ -45,7 +45,7 @@ tcpsvr_destroy(void *env,int code)
 	free(svr);
 }
 void *
-tcpsvr_init(struct rainContext*ctx,char *args)
+tcpsvrNew(struct rainContext*ctx,char *args)
 {
 	tcpsvr_t * svr = malloc(sizeof(tcpsvr_t));
 	svr->fd = -1;
