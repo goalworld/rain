@@ -75,6 +75,9 @@ rain_array_pushfront(rain_array_t *arr,void *elem)
 	memmove((char*)(arr->arr_data)+1*arr->elem_sz,
 			(char*)(arr->arr_data),
 			arr->cut_sz*arr->elem_sz);
+	memcpy((char*)(arr->arr_data),
+			elem,
+			arr->elem_sz);
 	arr->cut_sz++;
 }
 void
