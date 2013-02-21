@@ -16,7 +16,7 @@
 #define VEC_SIZE  64
 struct rainLifeQueue
 {
-	struct wodQueue r_queue;
+	struct wod_queue r_queue;
 	//
 #ifdef PTHREAD_LOCK
 	pthread_mutex_t mtx;
@@ -37,7 +37,7 @@ rainLifeQueueInit()
 #else
 	rainMutexInit(&LQ->mtx);
 #endif
-	return wodQueueInit(&LQ->r_queue,sizeof(rainRoutine));
+	return wod_queue_init(&LQ->r_queue,sizeof(rainRoutine));
 }
 void
 rainLifeQueuePush(rainRoutine rid)
@@ -48,7 +48,7 @@ rainLifeQueuePush(rainRoutine rid)
 #else
 	rainMutexLock(&lq->mtx);
 #endif
-	wodQueuePush(&lq->r_queue,&rid);
+	wod_queue_push(&lq->r_queue,&rid);
 #ifdef PTHREAD_LOCK
 	pthread_cond_signal(&lq->con);
 	pthread_mutex_unlock(&lq->mtx);
@@ -66,7 +66,7 @@ rainLifeQueuePop(rainRoutine *rid)
 #else
 	rainMutexLock(&lq->mtx);
 #endif
-	if( wodQueuePop(&lq->r_queue,rid) != 0){
+	if( wod_queue_pop(&lq->r_queue,rid) != 0){
 #ifdef PTHREAD_LOCK
 		pthread_cond_wait(&lq->con,&lq->mtx);
 		pthread_mutex_unlock(&lq->mtx);

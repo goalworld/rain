@@ -38,7 +38,7 @@ static  struct rainHandle * H = NULL;
 struct rainContext
 {
 	struct rainMsgQueue * msgQue;
-	struct wodArray arr;
+	struct wod_array arr;
 	rainMutex mtx;
 	struct rainModule * mod;
 	rainRoutine rid;//const
@@ -134,7 +134,7 @@ rainContextNew(rainRoutine prid, const char * mod_name,const char *args)
 	ctx->timeoutfn = NULL;
 	ctx->nexttickfn = NULL;
 	rainMutexInit(&ctx->mtx);
-	wodArrayInit(&ctx->arr,sizeof(rainRoutine));
+	wod_array_init(&ctx->arr,sizeof(rainRoutine));
 	ctx->msgQue = rainMsgQueueNew();
 	ctx->bmain = false;
 	_ctx_genid(ctx);
@@ -180,17 +180,17 @@ rainContextAddLink(struct rainContext *ctx,rainRoutine rid)
 {
 	assert(ctx);
 	rainMutexLock(&ctx->mtx);
-	int sz = wodArraySize(&ctx->arr);
+	int sz = wod_array_size(&ctx->arr);
 	for(;sz>0;sz--){
 		rainRoutine tmpid;
-		wodArrayAt(&ctx->arr,sz-1,&tmpid);
+		wod_array_at(&ctx->arr,sz-1,&tmpid);
 		if(tmpid == rid){
 			RAIN_LOG(0,"function<rain_ctx_addlink>:ctx(%d) Is already linked by ctx(%d).",ctx->rid,rid);
 			rainMutexUnLock(&ctx->mtx);
 			return RAIN_ERROR;
 		}
 	}
-	wodArrayPush(&ctx->arr,&rid);
+	wod_array_push(&ctx->arr,&rid);
 	rainMutexUnLock(&ctx->mtx);
 	return RAIN_OK;
 }
@@ -357,17 +357,17 @@ static void
 _ctx_destroy(struct rainContext *ctx)
 {
 	rainModuleInstDel(ctx->mod,ctx->arg,ctx->exit_code);
-	int size = wodArraySize(&ctx->arr);
+	int size = wod_array_size(&ctx->arr);
 	if(size == 0){
-		wodArrayDestroy(&ctx->arr);
+		wod_array_destroy(&ctx->arr);
 	}else{
 		struct rainCtxMsg rmsg;
 		rainRoutine rids[size];
 		rmsg.src = ctx->rid;
 		rmsg.type = RAIN_MSG_EXIT;
 		rmsg.u_sz.exitcode = ctx->exit_code;
-		wodArrayErase(&ctx->arr,0,size,rids);
-		wodArrayDestroy(&ctx->arr);
+		wod_array_earse(&ctx->arr,0,size,rids);
+		wod_array_destroy(&ctx->arr);
 		int i=0;
 		for(i=0; i<size; i++){
 			rainHandlePushMsg(rids[i],rmsg);

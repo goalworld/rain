@@ -12,7 +12,7 @@
 #define VEC_SIZE  64
 struct rainMsgQueue
 {
-	struct wodQueue r_queue;
+	struct wod_queue r_queue;
 	rainMutex mtx;
 };
 
@@ -23,7 +23,7 @@ struct rainMsgQueue*
 rainMsgQueueNew()
 {
 	struct rainMsgQueue * mq =  malloc(sizeof(struct rainMsgQueue));
-	wodQueueInit(&mq->r_queue,sizeof(struct rainCtxMsg));
+	wod_queue_init(&mq->r_queue,sizeof(struct rainCtxMsg));
 	rainMutexInit(&mq->mtx);
 	return mq;
 }
@@ -32,7 +32,7 @@ rainMsgQueueDelete(struct rainMsgQueue*mq,rainMsgDelFn delfn)
 {
 	assert(mq);
 	rainMutexLock(&mq->mtx);
-	wodQueueDestroy(&mq->r_queue,(void(*)(void *))delfn);
+	wod_queue_destroy(&mq->r_queue,(void(*)(void *))delfn);
 	rainMutexUnLock(&mq->mtx);
 	free(mq);
 }
@@ -41,7 +41,7 @@ rainMsgQueuePush(struct rainMsgQueue *mq,struct rainCtxMsg msg)
 {
 	assert(mq);
 	rainMutexLock(&mq->mtx);
-	wodQueuePush(&mq->r_queue,&msg);
+	wod_queue_push(&mq->r_queue,&msg);
 	rainMutexUnLock(&mq->mtx);
 }
 int
@@ -49,7 +49,7 @@ rainMsgQueuePop(struct rainMsgQueue *mq,struct rainCtxMsg *msg)
 {
 	assert(mq);
 	rainMutexLock(&mq->mtx);
-	int ret = wodQueuePop(&mq->r_queue,msg);
+	int ret = wod_queue_pop(&mq->r_queue,msg);
 	rainMutexUnLock(&mq->mtx);
 	return ret;
 }
@@ -57,7 +57,7 @@ int
 rainMsgQueueSize(struct rainMsgQueue * mq)
 {
 	rainMutexLock(&mq->mtx);
-	int sz = wodQueueSize(&mq->r_queue);
+	int sz = wod_queue_size(&mq->r_queue);
 	rainMutexUnLock(&mq->mtx);
 	return sz;
 }

@@ -18,16 +18,16 @@ static inline int hash_func(int handle){
 	return handle % TCPSVR_MAX_CONNECT;
 }
 static void
-_doAccept(struct wodEvLoop *loop,void * nv,int mask);
+_doAccept(struct wod_event_loop *loop,void * nv,int mask);
 static tcpclient_t * _new_client(tcpsvr_t *svr,int fd);
 int
 tcpsvr_run(tcpsvr_t* svr)
 {
-	wodEvRun(svr->loop);
-	long long now = wodEvGetTime();
+	wod_event_loop_loop(svr->loop);
+	long long now = wod_event_time();
 	long long dif_time = now - svr->pre_loop_time;
 	if(dif_time < BLOCK_MIN_TIME){
-		wodEvSleep(dif_time);
+		wod_event_sleep(dif_time);
 	}
 	svr->pre_loop_time = now;
 	return RAIN_OK;
@@ -35,22 +35,22 @@ tcpsvr_run(tcpsvr_t* svr)
 int
 tcpsvr_listen(tcpsvr_t* svr,const char *host,int port)
 {
-	svr->fd = wodNetTcpListen(TCP4,host,port);
-	wodNetSetNonBlock(svr->fd,1);
-	wodEvIOAdd(svr->loop,svr->fd,WV_IO_READ,_doAccept,svr);
+	svr->fd = wod_tcp_listen(TCP4,host,port);
+	wod_set_noblock(svr->fd,1);
+	wod_event_io_add(svr->loop,svr->fd,WV_IO_READ,_doAccept,svr);
 	return RAIN_OK;
 }
 static void
-_doAccept(struct wodEvLoop *loop,void * nv,int mask)
+_doAccept(struct wod_event_loop *loop,void * nv,int mask)
 {
 	tcpsvr_t *svr = (tcpsvr_t *)nv;
 	for(;;){
-		wodNetFd cfd = wodNetAccept(svr->fd);
+		wod_socket_t cfd = wod_accept(svr->fd);
 		if(cfd < 0){
 			if(-cfd == EAGAIN){
 				break;
 			}
-			wodEvIORemove(svr->loop,svr->fd,WV_IO_READ);
+			wod_event_io_remove(svr->loop,svr->fd,WV_IO_READ);
 			perror("Error:socket create fail");
 			return;
 		}
@@ -58,12 +58,12 @@ _doAccept(struct wodEvLoop *loop,void * nv,int mask)
 		if(cli){
 			tcpsvr_notifyconnect(svr,cli);
 		}else{
-			wodNetClose(cfd);
+			wod_close(cfd);
 		}
 	}
 }
 static tcpclient_t *
-_new_client(tcpsvr_t *svr,wodNetFd fd)
+_new_client(tcpsvr_t *svr,wod_socket_t fd)
 {
 	if(svr->num_cli == TCPSVR_MAX_CONNECT){
 		return NULL;
@@ -84,8 +84,8 @@ _new_client(tcpsvr_t *svr,wodNetFd fd)
 		return NULL;
 	}
 	cli->binuse = true;
-	wodNetSetNonBlock(fd,1);
-	wodNetSetKeepAlive(fd,1);
+	wod_set_noblock(fd,1);
+	wod_set_keep_alive(fd,1);
 	++svr->num_cli;
 	return cli;
 }

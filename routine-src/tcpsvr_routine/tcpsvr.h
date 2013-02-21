@@ -24,23 +24,23 @@ enum
 typedef struct tcpclient_s
 {
 	struct tcpsvr_s *svr;
-	wodNetFd fd;
+	wod_socket_t fd;
 	int id;
 	bool binuse;
 	int sockstate;
-	struct wodCycleBuf cycle_wrbuf;
-	struct wodCycleBuf cycle_rebuf;
+	struct wod_cycle_buffer cycle_wrbuf;
+	struct wod_cycle_buffer cycle_rebuf;
 }tcpclient_t;
 
 typedef struct tcpsvr_s
 {
-	wodNetFd fd;
+	wod_socket_t fd;
 	struct rainContext * ctx;
 	char *args;
 	tcpclient_t clients[TCPSVR_MAX_CONNECT];
 	int num_cli;
 	int cut_index;
-	struct wodEvLoop *loop;
+	struct wod_event_loop *loop;
 	long long pre_loop_time;
 	rainRoutine watchdog;
 	int headsz;
@@ -58,7 +58,7 @@ void tcpsvr_notifyread(tcpsvr_t *svr,tcpclient_t * cli ,void *buf,int sz);
 void tcpsvr_notifyclose(tcpsvr_t *svr,tcpclient_t * cli);
 void tcpsvr_notifyerror(tcpsvr_t *svr,tcpclient_t *cli);
 
-int tcpclient_init(tcpclient_t * cli,wodNetFd fd,int id);
+int tcpclient_init(tcpclient_t * cli,wod_socket_t fd,int id);
 /**
  * return>0:缓冲区满了
  * return=0:写到结尾。
