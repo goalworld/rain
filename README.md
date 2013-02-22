@@ -3,7 +3,9 @@ rain
 git://github.com/v8/v8.git
 make dependens
 make native library=shared
-
+git://github.com/goalworld/libwod.git
+make
+make install
 面向行为的并发模型（使用erlang的并发模型）
 所有的并发进程 都是以消息进行传递。
 (1)以组件的形式提供服务。
