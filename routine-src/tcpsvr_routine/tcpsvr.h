@@ -7,7 +7,7 @@
 
 #ifndef TCPSVR_ROUTINE_H_
 #define TCPSVR_ROUTINE_H_
-#include "cycle_buffer.h"
+#include "wod_cyclebuffer.h"
 #include <stdbool.h>
 #include <rain.h>
 #include <ev.h>
@@ -29,8 +29,8 @@ typedef struct tcpclient_s
 	int id;
 	bool binuse;
 	int sockstate;
-	cycle_buffer_t cycle_wrbuf;
-	cycle_buffer_t cycle_rebuf;
+	struct wodCycleBuf cycle_wrbuf;
+	struct wodCycleBuf cycle_rebuf;
 }tcpclient_t;
 
 typedef struct tcpsvr_s

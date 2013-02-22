@@ -31,13 +31,13 @@ tcpclient_init(tcpclient_t * cli,int fd,int id)
 	}
 	cli->id = id;
 	cli->fd = fd;
-	int ret = cycle_buffer_init(&cli->cycle_wrbuf,TCPCLI_BUF_DEFAULT_SZ);
+	int ret = wodCycleBufInit(&cli->cycle_wrbuf,TCPCLI_BUF_DEFAULT_SZ);
 	if(ret !=0){
 		return RAIN_ERROR;
 	}
-	ret = cycle_buffer_init(&cli->cycle_rebuf,TCPCLI_BUF_DEFAULT_SZ);
+	ret = wodCycleBufInit(&cli->cycle_rebuf,TCPCLI_BUF_DEFAULT_SZ);
 	if(ret !=0){
-		cycle_buffer_destroy(&cli->cycle_wrbuf);
+		wodCycleBufDestroy(&cli->cycle_wrbuf);
 		return RAIN_ERROR;
 	}
 	cli->sockstate = SOCK_OK;
@@ -53,8 +53,8 @@ static inline void
 _release(tcpclient_t * cli)
 {
 	close(cli->fd);
-	cycle_buffer_destroy(&cli->cycle_wrbuf);
-	cycle_buffer_destroy(&cli->cycle_rebuf);
+	wodCycleBufDestroy(&cli->cycle_wrbuf);
+	wodCycleBufDestroy(&cli->cycle_rebuf);
 }
 
 static void inline
@@ -66,7 +66,7 @@ _do_error(tcpclient_t * cli)
 	_release(cli);
 }
 static inline void
-_paser2(tcpclient_t * cli ,cycle_pair_t pair)
+_paser2(tcpclient_t * cli ,struct wodCyclePair pair)
 {
 	int firstsz = pair.first.sz;
 	int secondsz = pair.second.sz;
@@ -147,19 +147,19 @@ _paser2(tcpclient_t * cli ,cycle_pair_t pair)
 			}
 		}
 	}
-	cycle_buffer_pop(&cli->cycle_rebuf,numRead);
+	wodCycleBufPop(&cli->cycle_rebuf,numRead);
 }
 static void
 _read_cb(struct ev_loop * loop, ev_io *w, int revents)
 {
 	tcpclient_t * cli = (tcpclient_t *)w->data;
 	int ret = real_read(cli);
-	cycle_pair_t  pair;
-	if( cycle_buffer_getused(&cli->cycle_rebuf,&pair) == 0){
+	struct wodCyclePair  pair;
+	if( wodCycleBufUsed(&cli->cycle_rebuf,&pair) == 0){
 		if(cli->svr->headsz == 2){
 			_paser2(cli,pair);
 		}else{
-			cycle_buffer_pop(&cli->cycle_rebuf,pair.first.sz+pair.second.sz);
+			wodCycleBufPop(&cli->cycle_rebuf,pair.first.sz+pair.second.sz);
 		}
 	}
 	if(ret == 0){
@@ -206,8 +206,8 @@ static int
 real_write(tcpclient_t * cli,void *buf,int sz)
 {
 	assert(sz <= 0xffff);
-	cycle_pair_t pair;
-	int ret = cycle_buffer_getused(&cli->cycle_wrbuf,&pair);
+	struct wodCyclePair pair;
+	int ret = wodCycleBufUsed(&cli->cycle_wrbuf,&pair);
 	struct iovec io[4];
 	int num = 0;
 	int allsz = 0;
@@ -249,13 +249,13 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 						if(tmp > sz){
 							int dif = (sz+2-tmp)>0?(sz+2-tmp):0;
 							tmpbuf = zsBuf+dif;
-							cycle_buffer_push(&cli->cycle_wrbuf,zsBuf,2-dif);
+							wodCycleBufPush(&cli->cycle_wrbuf,zsBuf,2-dif);
 						}else{
 							tmpbuf = buf+(sz-tmp);
-							cycle_buffer_push(&cli->cycle_wrbuf,tmpbuf,tmp);
+							wodCycleBufPush(&cli->cycle_wrbuf,tmpbuf,tmp);
 						}
 					}
-					cycle_buffer_pop(&cli->cycle_wrbuf,wret);
+					wodCycleBufPop(&cli->cycle_wrbuf,wret);
 					return 1;
 				}else if(errno != EINTR){
 					return -1;
@@ -263,7 +263,7 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 			}else{
 				wsz+=wret;
 				if(wret == allsz){
-					cycle_buffer_pop(&cli->cycle_wrbuf,wret);
+					wodCycleBufPop(&cli->cycle_wrbuf,wret);
 					return 0;
 				}
 			}
@@ -295,13 +295,13 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 static int
 real_read(tcpclient_t * cli)
 {
-	cycle_pair_t pair;
+	struct wodCyclePair pair;
 	int fret = 0;
 
 	for(;;){
-		int ret = cycle_buffer_grow(&cli->cycle_rebuf,0,&pair);
+		int ret = wodCycleBufGrow(&cli->cycle_rebuf,0,&pair);
 		if(ret != 0){
-			ret = cycle_buffer_grow(&cli->cycle_rebuf,512,&pair);
+			ret = wodCycleBufGrow(&cli->cycle_rebuf,512,&pair);
 			if(ret !=0 ){
 				fret = -1;
 				break;
@@ -321,7 +321,7 @@ real_read(tcpclient_t * cli)
 		}
 		rret = readv(cli->fd,io,num);
 		if(rret < 0){
-			cycle_buffer_back(&cli->cycle_rebuf,allsz);
+			wodCycleBufBack(&cli->cycle_rebuf,allsz);
 			if(errno == EAGAIN){
 				fret = 1;
 				break;
@@ -331,11 +331,11 @@ real_read(tcpclient_t * cli)
 			}
 		}else if(rret == 0){
 			fret = 0;
-			cycle_buffer_back(&cli->cycle_rebuf,allsz);
+			wodCycleBufBack(&cli->cycle_rebuf,allsz);
 			break;
 		}else if(allsz > rret){
 			fret = 1;
-			cycle_buffer_back(&cli->cycle_rebuf,allsz-rret);
+			wodCycleBufBack(&cli->cycle_rebuf,allsz-rret);
 			break;
 		}
 	}
@@ -362,7 +362,7 @@ tcpclient_destroy(tcpclient_t * cli)
 	if(!tcpclient_isactive(cli)){
 		return ;
 	}
-	if(cycle_buffer_empty(&cli->cycle_rebuf)){
+	if(wodCycleBufEmpty(&cli->cycle_rebuf)){
 		ev_io_stop(tcpsvr_getloop(cli->svr),&cli->iowrite);
 		tcpsvr_notifyclosecp(cli->svr,cli);
 		_release(cli);

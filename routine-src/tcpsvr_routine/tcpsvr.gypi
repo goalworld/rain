@@ -5,7 +5,6 @@
 		"./"
 	],
 	"sources":[
-		"cycle_buffer.c",
 		"tcpsvr_client.c",
 		"tcpsvr_main.c",
 		"tcpsvr_server.c"

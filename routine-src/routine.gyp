@@ -13,6 +13,7 @@
 			"target_name":"tcpsvr",
 			"type":"shared_library",
 			"includes":["./tcpsvr_routine/tcpsvr.gypi",],
+			"libraries":["-lwod"],
 			'dependencies': [
       	 		'../deps/deps.gyp:ev',
       	 	]

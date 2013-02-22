@@ -3,4 +3,4 @@
 export builddir_name ?= ./routine-src/out
 .PHONY: all
 all:
-	$(MAKE) -C .. tcpsvr test jsv8
+	$(MAKE) -C .. test tcpsvr jsv8

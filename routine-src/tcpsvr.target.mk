@@ -20,7 +20,6 @@ INCS_Default := \
 	-Iroutine-src/tcpsvr_routine
 
 OBJS := \
-	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/cycle_buffer.o \
 	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/tcpsvr_client.o \
 	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/tcpsvr_main.o \
 	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/tcpsvr_server.o
@@ -55,7 +54,8 @@ $(obj).$(TOOLSET)/$(TARGET)/%.o: $(obj)/%.c FORCE_DO_CMD
 LDFLAGS_Default := \
 	-Wl,-E -pg 
 
-LIBS :=
+LIBS := \
+	-lwod
 
 $(obj).target/routine-src/libtcpsvr.so: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(obj).target/routine-src/libtcpsvr.so: LIBS := $(LIBS)
