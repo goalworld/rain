@@ -321,11 +321,6 @@ ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
 endif
 ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
     $(findstring $(join ^,$(prefix)),\
-                 $(join ^,deps/ev.target.mk)))),)
-  include deps/ev.target.mk
-endif
-ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
-    $(findstring $(join ^,$(prefix)),\
                  $(join ^,rain-src/rain.target.mk)))),)
   include rain-src/rain.target.mk
 endif
@@ -347,7 +342,7 @@ endif
 
 quiet_cmd_regen_makefile = ACTION Regenerating $@
 cmd_regen_makefile = /home/wd/gyp-read-only/gyp -fmake --ignore-environment "--toplevel-dir=." "--depth=." build/all.gyp
-Makefile: routine-src/tcpsvr_routine/tcpsvr.gypi routine-src/jsv8_routine/jsv8.gypi deps/deps.gyp routine-src/routine.gyp deps/libev-4.11/ev.gypi build/all.gyp routine-src/test_routine/test.gypi rain-src/rain.gyp
+Makefile: routine-src/tcpsvr_routine/tcpsvr.gypi routine-src/jsv8_routine/jsv8.gypi routine-src/routine.gyp build/all.gyp routine-src/test_routine/test.gypi rain-src/rain.gyp
 	$(call do_cmd,regen_makefile)
 
 # "all" is a concatenation of the "all" targets from all the included

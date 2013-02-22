@@ -13,19 +13,13 @@
 			"target_name":"tcpsvr",
 			"type":"shared_library",
 			"includes":["./tcpsvr_routine/tcpsvr.gypi",],
-			"libraries":["-lwod"],
-			'dependencies': [
-      	 		'../deps/deps.gyp:ev',
-      	 	]
+			"libraries":["-lwod"]
 		},
 		{
 			"target_name":"jsv8",
 			"type":"shared_library",
 			"includes":["./jsv8_routine/jsv8.gypi",],
-			"libraries":["-lv8"],
-			'dependencies': [
-      	 		'../deps/deps.gyp:ev',
-      	 	]
+			"libraries":["-lv8"]
 		},
   	]
 }

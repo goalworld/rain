@@ -10,21 +10,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <sys/uio.h>
-#include <unistd.h>
-#include <sys/socket.h>
 #include <assert.h>
 #include <memory.h>
 #include <netinet/in.h>
 
 #define TCPCLI_BUF_DEFAULT_SZ 1024
-static void _read_cb(struct ev_loop * loop, ev_io *w, int revents);
-static void _write_cb(struct ev_loop * loop, ev_io *w, int revents);
+static void
+_doRead(struct wodEvLoop *loop,void * nv,int mask);
+static void
+_doWrite(struct wodEvLoop *loop,void * nv,int mask);
 static int real_read(tcpclient_t * cli);
 static int real_write(tcpclient_t * cli,void *buf,int sz);
 
 int
-tcpclient_init(tcpclient_t * cli,int fd,int id)
+tcpclient_init(tcpclient_t * cli,wodNetFd fd,int id)
 {
 	if(cli->binuse){
 		return RAIN_ERROR;
@@ -41,18 +40,15 @@ tcpclient_init(tcpclient_t * cli,int fd,int id)
 		return RAIN_ERROR;
 	}
 	cli->sockstate = SOCK_OK;
-	ev_io_init(&cli->ioread,_read_cb,fd,EV_READ);
-	ev_io_init(&cli->iowrite,_write_cb,fd,EV_WRITE);
-	cli->ioread.data = cli;
-	cli->iowrite.data = cli;
-	ev_io_start(tcpsvr_getloop(cli->svr),&cli->ioread);
+	wodEvIOAdd(cli->svr->loop,fd,WV_IO_READ,_doRead,cli);
+	//wodEvIOAdd(cli->svr->loop,fd,WV_IO_WRITE,_doWrite,cli);
 	return RAIN_OK;
 }
 
 static inline void
 _release(tcpclient_t * cli)
 {
-	close(cli->fd);
+	wodNetClose(cli->fd);
 	wodCycleBufDestroy(&cli->cycle_wrbuf);
 	wodCycleBufDestroy(&cli->cycle_rebuf);
 }
@@ -60,8 +56,7 @@ _release(tcpclient_t * cli)
 static void inline
 _do_error(tcpclient_t * cli)
 {
-	ev_io_stop(tcpsvr_getloop(cli->svr),&cli->iowrite);
-	ev_io_stop(tcpsvr_getloop(cli->svr),&cli->ioread);
+	wodEvIORemove(cli->svr->loop,cli->fd,WV_IO_READ|WV_IO_WRITE);
 	tcpsvr_notifyerror(cli->svr,cli);
 	_release(cli);
 }
@@ -150,9 +145,9 @@ _paser2(tcpclient_t * cli ,struct wodCyclePair pair)
 	wodCycleBufPop(&cli->cycle_rebuf,numRead);
 }
 static void
-_read_cb(struct ev_loop * loop, ev_io *w, int revents)
+_doRead(struct wodEvLoop *loop,void * nv,int mask)
 {
-	tcpclient_t * cli = (tcpclient_t *)w->data;
+	tcpclient_t * cli = (tcpclient_t *)nv;
 	int ret = real_read(cli);
 	struct wodCyclePair  pair;
 	if( wodCycleBufUsed(&cli->cycle_rebuf,&pair) == 0){
@@ -163,7 +158,7 @@ _read_cb(struct ev_loop * loop, ev_io *w, int revents)
 		}
 	}
 	if(ret == 0){
-		ev_io_stop(tcpsvr_getloop(cli->svr),&cli->ioread);
+		wodEvIORemove(cli->svr->loop,cli->fd,WV_IO_READ);
 		if(cli->sockstate & SOCK_WRITE_CLOSED){
 			tcpsvr_notifyclosecp(cli->svr,cli);
 			_release(cli);
@@ -175,9 +170,9 @@ _read_cb(struct ev_loop * loop, ev_io *w, int revents)
 }
 
 static void
-_write_cb(struct ev_loop * loop, ev_io *w, int revents)
+_doWrite(struct wodEvLoop *loop,void * nv,int mask)
 {
-	tcpclient_t * cli = (tcpclient_t *)w->data;
+	tcpclient_t * cli = (tcpclient_t *)nv;
 	tcpclient_write(cli,NULL,0);
 }
 int
@@ -185,7 +180,7 @@ tcpclient_write(tcpclient_t * cli,void *buf,int sz)
 {
 	int send = real_write(cli,buf,sz);
 	if(send == 0){
-		ev_io_stop(tcpsvr_getloop(cli->svr),&cli->iowrite);
+		wodEvIORemove(cli->svr->loop,cli->fd,WV_IO_WRITE);
 		if(cli->sockstate & SOCK_WRITE_WAIT_CLOSED){
 			cli->sockstate |= SOCK_WRITE_CLOSED;
 			shutdown(cli->fd,SHUT_WR);
@@ -197,7 +192,7 @@ tcpclient_write(tcpclient_t * cli,void *buf,int sz)
 	}else if(send < 0  ){
 		_do_error(cli);
 	}else{
-		ev_io_start(tcpsvr_getloop(cli->svr),&cli->iowrite);
+		wodEvIOAdd(cli->svr->loop,cli->fd,WV_IO_WRITE,_doWrite,cli);
 	}
 	return send;
 }
@@ -208,17 +203,17 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 	assert(sz <= 0xffff);
 	struct wodCyclePair pair;
 	int ret = wodCycleBufUsed(&cli->cycle_wrbuf,&pair);
-	struct iovec io[4];
+	struct wodNetBuf io[4];
 	int num = 0;
 	int allsz = 0;
 	if(ret == 0){
-		io[num].iov_base = pair.first.buf;
-		io[num].iov_len = pair.first.sz;
+		io[num].b_body = pair.first.buf;
+		io[num].b_sz = pair.first.sz;
 		++num;
 		allsz+=pair.first.sz;
 		if(pair.second.sz > 0){
-			io[num].iov_base = pair.second.buf;
-			io[num].iov_len = pair.second.sz;
+			io[num].b_body = pair.second.buf;
+			io[num].b_sz = pair.second.sz;
 			++num;
 			allsz+=pair.second.sz;
 		}
@@ -227,20 +222,20 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 	if(buf){
 		zsBuf[0] = sz >>8;
 		zsBuf[1] = sz;
-		io[num].iov_base = zsBuf;
-		io[num].iov_len = 2;
+		io[num].b_body = zsBuf;
+		io[num].b_sz = 2;
 		++num;
 		allsz+=2;
-		io[num].iov_base = buf;
-		io[num].iov_len = sz;
+		io[num].b_body = buf;
+		io[num].b_sz = sz;
 		++num;
 		allsz+=sz;
 	}
 	if(num > 0){
 		int wsz=0;
-		struct iovec *tmpio = io;
+		struct wodNetBuf *tmpio = io;
 		for(;;){
-			int wret = writev(cli->fd,tmpio,num);
+			int wret = wodNetWritev(cli->fd,tmpio,num);
 			if(wret<0){
 				if(errno == EAGAIN){
 					if(buf){
@@ -270,13 +265,13 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 			int tmpwsz = wsz;
 			int i=0,tmpnum = num;
 			for(i=0; i<tmpnum ;i++){
-				tmpwsz-=tmpio->iov_len;
+				tmpwsz-=tmpio->b_sz;
 				if(tmpwsz >= 0){
 					++tmpio;
 					num--;
 				}else{
-					tmpio->iov_base = (uint8_t*)(tmpio->iov_base)+(tmpio->iov_len+tmpwsz);
-					tmpio->iov_len = -tmpwsz;
+					tmpio->b_body = (uint8_t*)(tmpio->b_body)+(tmpio->b_sz+tmpwsz);
+					tmpio->b_sz = -tmpwsz;
 					break;
 				}
 			}
@@ -308,18 +303,18 @@ real_read(tcpclient_t * cli)
 			}
 		}
 		int rret = 0,allsz=0,num=0;
-		struct iovec io[2];
-		io[num].iov_base = pair.first.buf;
-		io[num].iov_len = pair.first.sz;
+		struct wodNetBuf io[2];
+		io[num].b_body = pair.first.buf;
+		io[num].b_sz = pair.first.sz;
 		++num;
 		allsz +=pair.first.sz;
 		if(pair.second.sz > 0 ){
-			io[1].iov_base = pair.second.buf;
-			io[1].iov_len = pair.second.sz;
+			io[1].b_body = pair.second.buf;
+			io[1].b_sz = pair.second.sz;
 			++num;
 			allsz +=pair.second.sz;
 		}
-		rret = readv(cli->fd,io,num);
+		rret = wodNetReadv(cli->fd,io,num);
 		if(rret < 0){
 			wodCycleBufBack(&cli->cycle_rebuf,allsz);
 			if(errno == EAGAIN){
@@ -347,7 +342,7 @@ tcpclient_close(tcpclient_t * cli)
 	if(cli->sockstate & SOCK_READ_CLOSED){
 		return ;
 	}
-	ev_io_stop(tcpsvr_getloop(cli->svr),&cli->ioread);
+	wodEvIORemove(cli->svr->loop,cli->fd,WV_IO_READ);
 	cli->sockstate |= SOCK_READ_CLOSED;
 	shutdown(cli->fd,SHUT_RD);
 	if(cli->sockstate & SOCK_WRITE_CLOSED){
@@ -363,7 +358,7 @@ tcpclient_destroy(tcpclient_t * cli)
 		return ;
 	}
 	if(wodCycleBufEmpty(&cli->cycle_rebuf)){
-		ev_io_stop(tcpsvr_getloop(cli->svr),&cli->iowrite);
+		wodEvIORemove(cli->svr->loop,cli->fd,WV_IO_WRITE);
 		tcpsvr_notifyclosecp(cli->svr,cli);
 		_release(cli);
 	}else{

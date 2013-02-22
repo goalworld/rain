@@ -44,7 +44,7 @@ tcpsvrDelete(void *env,int code)
 	if(svr->fd >=0){
 		close(svr->fd);
 	}
-	ev_loop_destroy(svr->loop);
+	wodEvLoopDel(svr->loop);
 	free(svr);
 }
 void *
@@ -64,7 +64,7 @@ tcpsvrNew(struct rainContext*ctx,char *args)
 	rainRoutine rids;
 	char *tmp = strdup(args);
 	char * token;
-	int flag = EVFLAG_AUTO;
+	int flag = WV_POLL_SELECT;
 	char modbuf[32];
 	int headsz = 0;
 	// parser
@@ -83,11 +83,11 @@ tcpsvrNew(struct rainContext*ctx,char *args)
 			rids = strtol(parm2,NULL,10);
 		}else if(strcmp(parm,"mode") == 0){
 			if(strcmp(parm2,"select") == 0){
-				flag = EVBACKEND_SELECT;
+				flag = WV_POLL_SELECT;
 			}else if(strcmp(parm2,"epoll") == 0){
-				flag = EVBACKEND_EPOLL;
+				flag = WV_POLL_EPOLL;
 			}else if(strcmp(parm2,"poll") == 0){
-				flag = EVBACKEND_POLL;
+				flag = WV_POLL_POLL;
 			}
 			strncpy(modbuf,parm2,sizeof(modbuf));
 		}else if(strcmp(parm,"headsz") == 0){
@@ -101,23 +101,19 @@ tcpsvrNew(struct rainContext*ctx,char *args)
 	}
 	svr->watchdog = rids;
 	svr->headsz = headsz;
-	svr->loop = ev_loop_new(flag);
+	svr->loop = wodEvLoopNew(10240,flag);
 	if(!svr->loop){
 		free(svr);
 		return NULL;
 	}
 	int ret = tcpsvr_listen(svr,host,port);
 	if(ret == RAIN_ERROR){
-		ev_loop_destroy(svr->loop);
+		wodEvLoopDel(svr->loop);
 		free(svr);
 		return NULL;
 	}
 	RAIN_CALLBACK(ctx,_recv,_recv_rps,_link_exit,NULL,_next_tick);
-	ev_set_userdata(svr->loop,svr);
-	svr->pre_loop_time = ev_time();
-	//ev_timer_init(&svr->timer,_timercb,1.0,1.0);
-	//svr->timer.data = svr;
-	//ev_timer_start(svr->loop,&svr->timer);
+	svr->pre_loop_time = wodEvGetTime();
 	rainNextTick(ctx,_svr_next_tick);
 	rainLink(ctx,svr->watchdog);
 	//rain_debug(svr->ctx,"<TCP-SERVER>: At(%s:%d),watcher:%d,mode:%s",host,port,rids,modbuf);
@@ -131,18 +127,6 @@ _link_exit(void *env,rainRoutine exitid,int code)
 		rainExit(svr->ctx,0);
 	}
 }
-/*
-static void
-_timercb(struct ev_loop * loop, ev_timer *w, int revents)
-{
-	tcpsvr_t * svr = (tcpsvr_t *)ev_userdata(loop);
-	if(svr->all_recv > 0){
-		float f = (double)(svr->all_recv)/(8*1024*1024);
-		printf("%f MB %d - which:%d\n",f,svr->num_cli,rain_routineid(svr->ctx));
-		svr->all_recv = 0;
-		fflush(stdout);
-	}
-}*/
 static void
 _next_tick(void *env,void *user_data)
 {

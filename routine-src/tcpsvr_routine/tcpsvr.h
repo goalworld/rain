@@ -10,7 +10,8 @@
 #include "wod_cyclebuffer.h"
 #include <stdbool.h>
 #include <rain.h>
-#include <ev.h>
+#include <wod_ev.h>
+#include <wod_net.h>
 #define TCPSVR_MAX_CONNECT 4096
 struct tcpsvr_s;
 enum
@@ -23,9 +24,7 @@ enum
 typedef struct tcpclient_s
 {
 	struct tcpsvr_s *svr;
-	ev_io ioread;
-	ev_io iowrite;
-	int fd;
+	wodNetFd fd;
 	int id;
 	bool binuse;
 	int sockstate;
@@ -35,19 +34,17 @@ typedef struct tcpclient_s
 
 typedef struct tcpsvr_s
 {
-	int fd;
-	ev_io listen_ev;
+	wodNetFd fd;
 	struct rainContext * ctx;
 	char *args;
 	tcpclient_t clients[TCPSVR_MAX_CONNECT];
 	int num_cli;
 	int cut_index;
-	struct ev_loop * loop;
-	double pre_loop_time;
+	struct wodEvLoop *loop;
+	long long pre_loop_time;
 	rainRoutine watchdog;
 	int headsz;
 	long all_recv;
-	ev_timer timer;
 	bool bInit;
 }tcpsvr_t;
 #define tcpsvr_getloop(svr) ((svr)->loop)
@@ -61,7 +58,7 @@ void tcpsvr_notifyread(tcpsvr_t *svr,tcpclient_t * cli ,void *buf,int sz);
 void tcpsvr_notifyclose(tcpsvr_t *svr,tcpclient_t * cli);
 void tcpsvr_notifyerror(tcpsvr_t *svr,tcpclient_t *cli);
 
-int tcpclient_init(tcpclient_t * cli,int fd,int id);
+int tcpclient_init(tcpclient_t * cli,wodNetFd fd,int id);
 /**
  * return>0:缓冲区满了
  * return=0:写到结尾。

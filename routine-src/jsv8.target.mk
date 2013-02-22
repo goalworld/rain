@@ -27,9 +27,6 @@ OBJS := \
 # Add to the list of files we specially track dependencies for.
 all_deps += $(OBJS)
 
-# Make sure our dependencies are built before any of us.
-$(OBJS): | $(obj).target/deps/libev.a
-
 # CFLAGS et al overrides must be target-local.
 # See "Target-specific Variable Values" in the GNU Make manual.
 $(OBJS): TOOLSET := $(TOOLSET)
@@ -59,9 +56,9 @@ LIBS := \
 
 $(obj).target/routine-src/libjsv8.so: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(obj).target/routine-src/libjsv8.so: LIBS := $(LIBS)
-$(obj).target/routine-src/libjsv8.so: LD_INPUTS := $(OBJS) $(obj).target/deps/libev.a
+$(obj).target/routine-src/libjsv8.so: LD_INPUTS := $(OBJS)
 $(obj).target/routine-src/libjsv8.so: TOOLSET := $(TOOLSET)
-$(obj).target/routine-src/libjsv8.so: $(OBJS) $(obj).target/deps/libev.a FORCE_DO_CMD
+$(obj).target/routine-src/libjsv8.so: $(OBJS) FORCE_DO_CMD
 	$(call do_cmd,solink)
 
 all_deps += $(obj).target/routine-src/libjsv8.so
