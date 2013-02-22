@@ -2,22 +2,25 @@
 
 TOOLSET := target
 TARGET := tcpsvr
-DEFS_Default := 
+DEFS_Default :=
 
 # Flags passed to all source files.
-CFLAGS_Default := -fPIC -Wall -g3
+CFLAGS_Default := \
+	-fPIC -Wall -g3
 
 # Flags passed to only C files.
-CFLAGS_C_Default := 
+CFLAGS_C_Default :=
 
 # Flags passed to only C++ files.
-CFLAGS_CC_Default := 
+CFLAGS_CC_Default :=
 
-INCS_Default := -Ideps/libev-4.11 \
+INCS_Default := \
+	-Ideps/libev-4.11 \
 	-Irain-src/include \
 	-Iroutine-src/tcpsvr_routine
 
-OBJS := $(obj).target/$(TARGET)/routine-src/tcpsvr_routine/cycle_buffer.o \
+OBJS := \
+	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/cycle_buffer.o \
 	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/tcpsvr_client.o \
 	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/tcpsvr_main.o \
 	$(obj).target/$(TARGET)/routine-src/tcpsvr_routine/tcpsvr_server.o
@@ -31,8 +34,8 @@ $(OBJS): | $(obj).target/deps/libev.a
 # CFLAGS et al overrides must be target-local.
 # See "Target-specific Variable Values" in the GNU Make manual.
 $(OBJS): TOOLSET := $(TOOLSET)
-$(OBJS): GYP_CFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE)) $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_C_$(BUILDTYPE))
-$(OBJS): GYP_CXXFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE)) $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_CC_$(BUILDTYPE))
+$(OBJS): GYP_CFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_C_$(BUILDTYPE))
+$(OBJS): GYP_CXXFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_CC_$(BUILDTYPE))
 
 # Suffix rules, putting all outputs into $(obj).
 
@@ -49,9 +52,10 @@ $(obj).$(TOOLSET)/$(TARGET)/%.o: $(obj)/%.c FORCE_DO_CMD
 
 # End of this set of suffix rules
 ### Rules for final target.
-LDFLAGS_Default := -Wl,-E -pg 
+LDFLAGS_Default := \
+	-Wl,-E -pg 
 
-LIBS := 
+LIBS :=
 
 $(obj).target/routine-src/libtcpsvr.so: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(obj).target/routine-src/libtcpsvr.so: LIBS := $(LIBS)

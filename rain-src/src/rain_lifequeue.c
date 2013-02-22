@@ -9,14 +9,14 @@
 #include "rain_mutex.h"
 #include <stdlib.h>
 #include <assert.h>
-#include "rain_queue.h"
+#include "wod_queue.h"
 #ifdef PTHREAD_LOCK
 #include <pthread.h>
 #endif
 #define VEC_SIZE  64
 struct rainLifeQueue
 {
-	rain_queue_t r_queue;
+	struct wodQueue r_queue;
 	//
 #ifdef PTHREAD_LOCK
 	pthread_mutex_t mtx;
@@ -37,7 +37,7 @@ rainLifeQueueInit()
 #else
 	rainMutexInit(&LQ->mtx);
 #endif
-	return rain_queue_init(&LQ->r_queue,sizeof(rainRoutine));
+	return wodQueueInit(&LQ->r_queue,sizeof(rainRoutine));
 }
 void
 rainLifeQueuePush(rainRoutine rid)
@@ -48,7 +48,7 @@ rainLifeQueuePush(rainRoutine rid)
 #else
 	rainMutexLock(&lq->mtx);
 #endif
-	rain_queue_push(&lq->r_queue,&rid);
+	wodQueuePush(&lq->r_queue,&rid);
 #ifdef PTHREAD_LOCK
 	pthread_cond_signal(&lq->con);
 	pthread_mutex_unlock(&lq->mtx);
@@ -66,7 +66,7 @@ rainLifeQueuePop(rainRoutine *rid)
 #else
 	rainMutexLock(&lq->mtx);
 #endif
-	if( rain_queue_pop(&lq->r_queue,rid) != 0){
+	if( wodQueuePop(&lq->r_queue,rid) != 0){
 #ifdef PTHREAD_LOCK
 		pthread_cond_wait(&lq->con,&lq->mtx);
 		pthread_mutex_unlock(&lq->mtx);

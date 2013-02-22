@@ -33,7 +33,7 @@ struct rainModule
 static int _open(const char * mod_name,struct rainModule *pmod);
 static void* _tryopen(const char *mod_name);
 int
-rain_module_init(const char * mod_path)
+rainModuleInit(const char * mod_path)
 {
 	MGR = malloc(sizeof(rain_module_mgr_t));
 	MGR->module = malloc(sizeof(struct rainModule)*MGR_SET);
@@ -43,12 +43,12 @@ rain_module_init(const char * mod_path)
 	return RAIN_OK;
 }
 const char*
-rain_module_name(struct rainModule *mod)
+rainModuleName(struct rainModule *mod)
 {
 	return mod->name;
 }
 struct rainModule *
-rain_module_query(const char * mod_name)
+rainModuleQuery(const char * mod_name)
 {
 	rain_module_mgr_t * mgr = MGR;
 	int i;
@@ -71,13 +71,13 @@ rain_module_query(const char * mod_name)
 	return pmod;
 }
 void *
-rain_module_inst_init(struct rainModule *mod,struct rainContext *ctx,
+rainModuleInstNew(struct rainModule *mod,struct rainContext *ctx,
 		const char *args)
 {
 	return mod->_init(ctx,args);
 }
 void
-rain_module_inst_destroy(struct rainModule *mod,void *env,int code)
+rainModuleInstDel(struct rainModule *mod,void *env,int code)
 {
 	mod->_destroy(env,code);
 }

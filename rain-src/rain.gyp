@@ -16,16 +16,15 @@
 				"src/rain_context.c",
 				"src/rain_imp.c",
 				"src/rain_lifequeue.c",
+				"src/rain_msgqueue.c",
 				"src/rain_module.c",
-				"src/rain_queue.c",
 				"src/rain_start.c",
 				"src/rain_rpc.c",
-				"src/rain_array.c",
 				"src/rain_timer.c",
 				"src/rain_loger.c",
 				"src/rain_utils.c"
 			],
-			"libraries":['-ldl','-lpthread',"-lm"],
+			"libraries":['-ldl','-lpthread',"-lm","-lwod"],
 		},
 	]
 }

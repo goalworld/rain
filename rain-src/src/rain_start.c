@@ -21,10 +21,11 @@
 #include "rain_rpc.h"
 #include "rain_loger.h"
 #include "rain_utils.h"
-static int rain_dispatch_routine(void);
+#include "rain_msgqueue.h"
+static int rainDispatchRoutine(void);
 static void * worker(void *arg);
 static void * evloop(void *arg);
-static void   sig_init(void);
+static void   _sigInit(void);
 
 int
 main(int argc,char *argv[])
@@ -36,12 +37,13 @@ main(int argc,char *argv[])
 	getcwd(dir,1024);
 	strcat(dir,"/routine/");
 	//printf("dir:%s %s %s %s\n",dir,argv[0],argv[1],argv[2]);
-	rain_module_init(dir);
+	rainModuleInit(dir);
 	free(dir);
 	rainTimerInit();
-	rain_rpc_init();
+	rainRpcInit();
 	rainLifeQueueInit();
-	sig_init();
+	rainMsgQueueInit();
+	_sigInit();
 	struct rainContext * ctx = rainContextNew(0,argv[1],argv[2]);
 	if(ctx == NULL){
 		exit(-1);
@@ -65,12 +67,12 @@ main(int argc,char *argv[])
 	exit(0);
 }
 static void
-sig_init(void)
+_sigInit(void)
 {
 	signal(SIGPIPE,SIG_IGN);
 }
 static int
-rain_dispatch_routine(void)
+rainDispatchRoutine(void)
 {
 	rainRoutine rid;
 	int ret = rainLifeQueuePop(&rid);
@@ -94,7 +96,7 @@ worker(void *arg)
 {
 	pthread_detach(pthread_self());
 	for(;;){
-		if(RAIN_ERROR == rain_dispatch_routine()){
+		if(RAIN_ERROR == rainDispatchRoutine()){
 			rainSleep(1E-1);
 		}
 	}

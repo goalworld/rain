@@ -8,9 +8,9 @@
 
 #include "rain_rpc.h"
 
-int rain_rpc_init(){
+int rainRpcInit(){
 	return RAIN_OK;
 }
-int rain_rpc_send(rainRoutine dest, struct rainCtxMsg msg){
+int rainRpcSend(rainRoutine dest, struct rainCtxMsg msg){
 	return RAIN_OK;
 }

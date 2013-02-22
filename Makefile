@@ -8,6 +8,7 @@ MAKEFLAGS=-r
 
 # The source directory tree.
 srcdir := .
+abs_srcdir := $(abspath $(srcdir))
 
 # The name of the builddir.
 builddir_name ?= out
@@ -37,31 +38,27 @@ abs_obj := $(abspath $(obj))
 # generated dependency rule Makefiles in one pass.
 all_deps :=
 
-# C++ apps need to be linked with g++.  Not sure what's appropriate.
+
+
+# C++ apps need to be linked with g++.
 #
-# Note, the flock is used to seralize linking. Linking is a memory-intensive
+# Note: flock is used to seralize linking. Linking is a memory-intensive
 # process so running parallel links can often lead to thrashing.  To disable
-# the serialization, override FLOCK via an envrionment variable as follows:
+# the serialization, override LINK via an envrionment variable as follows:
 #
-#   export FLOCK=
+#   export LINK=g++
 #
 # This will allow make to invoke N linker processes as specified in -jN.
-FLOCK ?= flock $(builddir)/linker.lock
+LINK ?= flock $(builddir)/linker.lock $(CXX.target)
 
-
-
-LINK ?= $(FLOCK) $(CXX)
 CC.target ?= $(CC)
 CFLAGS.target ?= $(CFLAGS)
 CXX.target ?= $(CXX)
 CXXFLAGS.target ?= $(CXXFLAGS)
 LINK.target ?= $(LINK)
-LDFLAGS.target ?= $(LDFLAGS) 
+LDFLAGS.target ?= $(LDFLAGS)
 AR.target ?= $(AR)
-ARFLAGS.target ?= crsT
 
-# N.B.: the logic of which commands to run should match the computation done
-# in gyp's make.py where ARFLAGS.host etc. is computed.
 # TODO(evan): move all cross-compilation logic to gyp-time so we don't need
 # to replicate this environment fallback in make as well.
 CC.host ?= gcc
@@ -71,7 +68,6 @@ CXXFLAGS.host ?=
 LINK.host ?= g++
 LDFLAGS.host ?=
 AR.host ?= ar
-ARFLAGS.host := crsT
 
 # Define a dir function that can handle spaces.
 # http://www.gnu.org/software/make/manual/make.html#Syntax-of-Functions
@@ -146,7 +142,10 @@ quiet_cmd_copy = COPY $@
 cmd_copy = ln -f "$<" "$@" 2>/dev/null || (rm -rf "$@" && cp -af "$<" "$@")
 
 quiet_cmd_alink = AR($(TOOLSET)) $@
-cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) $(ARFLAGS.$(TOOLSET)) $@ $(filter %.o,$^)
+cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
+
+quiet_cmd_alink_thin = AR($(TOOLSET)) $@
+cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crsT $@ $(filter %.o,$^)
 
 # Due to circular dependencies between libraries :(, we wrap the
 # special "figure out circular dependencies" flags around the entire
@@ -213,6 +212,22 @@ command_changed = $(or $(subst $(cmd_$(1)),,$(cmd_$(call replace_spaces,$@))),\
 #   $| -- order-only dependencies
 prereq_changed = $(filter-out FORCE_DO_CMD,$(filter-out $|,$?))
 
+# Helper that executes all postbuilds until one fails.
+define do_postbuilds
+  @E=0;\
+  for p in $(POSTBUILDS); do\
+    eval $$p;\
+    E=$$?;\
+    if [ $$E -ne 0 ]; then\
+      break;\
+    fi;\
+  done;\
+  if [ $$E -ne 0 ]; then\
+    rm -rf "$@";\
+    exit $$E;\
+  fi
+endef
+
 # do_cmd: run a command via the above cmd_foo names, if necessary.
 # Should always run for a given target to handle command-line changes.
 # Second argument, if non-zero, makes it do asm/C/C++ dependency munging.
@@ -231,15 +246,20 @@ $(if $(or $(command_changed),$(prereq_changed)),
   @$(call exact_echo,$(call escape_vars,cmd_$(call replace_spaces,$@) := $(cmd_$(1)))) > $(depfile)
   @$(if $(2),$(fixup_dep))
   $(if $(and $(3), $(POSTBUILDS)),
-    @for p in $(POSTBUILDS); do eval $$p; done
+    $(call do_postbuilds)
   )
 )
 endef
 
-# Declare "all" target first so it is the default, even though we don't have the
-# deps yet.
+# Declare the "all" target first so it is the default,
+# even though we don't have the deps yet.
 .PHONY: all
 all:
+
+# make looks for ways to re-generate included makefiles, but in our case, we
+# don't have a direct way. Explicitly telling make that it has nothing to do
+# for them makes it go faster.
+%.d: ;
 
 # Use FORCE_DO_CMD to force a target to run.  Should be coupled with
 # do_cmd.
@@ -326,7 +346,7 @@ ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
 endif
 
 quiet_cmd_regen_makefile = ACTION Regenerating $@
-cmd_regen_makefile = /usr/bin/gyp -fmake --ignore-environment "--toplevel-dir=." "--depth=." build/all.gyp
+cmd_regen_makefile = /home/wd/gyp-read-only/gyp -fmake --ignore-environment "--toplevel-dir=." "--depth=." build/all.gyp
 Makefile: routine-src/tcpsvr_routine/tcpsvr.gypi routine-src/jsv8_routine/jsv8.gypi deps/deps.gyp routine-src/routine.gyp deps/libev-4.11/ev.gypi build/all.gyp routine-src/test_routine/test.gypi rain-src/rain.gyp
 	$(call do_cmd,regen_makefile)
 
@@ -338,20 +358,5 @@ all:
 # target in our tree. Only consider the ones with .d (dependency) info:
 d_files := $(wildcard $(foreach f,$(all_deps),$(depsdir)/$(f).d))
 ifneq ($(d_files),)
-  # Rather than include each individual .d file, concatenate them into a
-  # single file which make is able to load faster.  We split this into
-  # commands that take 1000 files at a time to avoid overflowing the
-  # command line.
-  $(shell cat $(wordlist 1,1000,$(d_files)) > $(depsdir)/all.deps)
-
-  ifneq ($(word 1001,$(d_files)),)
-    $(error Found unprocessed dependency files (gyp didn't generate enough rules!))
-  endif
-
-  # make looks for ways to re-generate included makefiles, but in our case, we
-  # don't have a direct way. Explicitly telling make that it has nothing to do
-  # for them makes it go faster.
-  $(depsdir)/all.deps: ;
-
-  include $(depsdir)/all.deps
+  include $(d_files)
 endif

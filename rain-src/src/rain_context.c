@@ -5,18 +5,17 @@
  *      Author: goalworld
  */
 #include "rain_context.h"
-#include "rain_queue.h"
-#include "rain_module.h"
-#include "rain_mutex.h"
+#include "wod_array.h"
 #include "rain_lifequeue.h"
 #include <stdlib.h>
 #include <memory.h>
 #include <stdio.h>
 #include <assert.h>
 #include <stdbool.h>
-#include "rain_array.h"
 #include "rain_loger.h"
-
+#include "rain_msgqueue.h"
+#include "rain_mutex.h"
+#include "rain_module.h"
 #define CTX_SET 10240
 static inline int
 hash_func(int handle)
@@ -38,8 +37,8 @@ struct rainHandle
 static  struct rainHandle * H = NULL;
 struct rainContext
 {
-	rain_queue_t mq;
-	rain_array_t arr;
+	struct rainMsgQueue * msgQue;
+	struct wodArray arr;
 	rainMutex mtx;
 	struct rainModule * mod;
 	rainRoutine rid;//const
@@ -119,7 +118,7 @@ rainContextNew(rainRoutine prid, const char * mod_name,const char *args)
 	if(IS_FULL(H)){
 		return NULL;
 	}
-	struct rainModule *mod = rain_module_query(mod_name);
+	struct rainModule *mod = rainModuleQuery(mod_name);
 	if(!mod){
 		RAIN_LOG(0,"MODE_QUERY：modname:%s",mod_name);
 		return NULL;
@@ -135,14 +134,14 @@ rainContextNew(rainRoutine prid, const char * mod_name,const char *args)
 	ctx->timeoutfn = NULL;
 	ctx->nexttickfn = NULL;
 	rainMutexInit(&ctx->mtx);
-	rain_array_init(&ctx->arr,sizeof(rainRoutine));
-	rain_queue_init(&ctx->mq,sizeof(struct rainCtxMsg));
+	wodArrayInit(&ctx->arr,sizeof(rainRoutine));
+	ctx->msgQue = rainMsgQueueNew();
 	ctx->bmain = false;
 	_ctx_genid(ctx);
 	ctx->ref = 1;
 	ctx->bexit = 0;
 	ctx->prid = prid;
-	ctx->arg = rain_module_inst_init(mod,ctx,args);
+	ctx->arg = rainModuleInstNew(mod,ctx,args);
 	//EXEC;
 	if(ctx->arg == NULL){
 		RAIN_LOG(0,"RAIN_MAIN_FIALED：modname:%s args:%s",mod_name,args);
@@ -150,7 +149,7 @@ rainContextNew(rainRoutine prid, const char * mod_name,const char *args)
 		return NULL;
 	}
 	__sync_bool_compare_and_swap(&ctx->bmain,false,true);
-	if(rain_queue_size(&ctx->mq) > 0){
+	if(rainMsgQueueSize(ctx->msgQue) > 0){
 		if(__sync_bool_compare_and_swap(&ctx->bdis,0,1)){
 			rainLifeQueuePush(ctx->rid);
 		}
@@ -162,7 +161,7 @@ const char *
 rainContextModName(struct rainContext *ctx)
 {
 	assert(ctx);
-	return rain_module_name(ctx->mod);
+	return rainModuleName(ctx->mod);
 }
 rainRoutine
 rainContextGetId(struct rainContext *ctx)
@@ -181,17 +180,17 @@ rainContextAddLink(struct rainContext *ctx,rainRoutine rid)
 {
 	assert(ctx);
 	rainMutexLock(&ctx->mtx);
-	int sz = rain_array_size(&ctx->arr);
+	int sz = wodArraySize(&ctx->arr);
 	for(;sz>0;sz--){
 		rainRoutine tmpid;
-		rain_array_at(&ctx->arr,sz-1,&tmpid);
+		wodArrayAt(&ctx->arr,sz-1,&tmpid);
 		if(tmpid == rid){
 			RAIN_LOG(0,"function<rain_ctx_addlink>:ctx(%d) Is already linked by ctx(%d).",ctx->rid,rid);
 			rainMutexUnLock(&ctx->mtx);
 			return RAIN_ERROR;
 		}
 	}
-	rain_array_pushback(&ctx->arr,&rid);
+	wodArrayPush(&ctx->arr,&rid);
 	rainMutexUnLock(&ctx->mtx);
 	return RAIN_OK;
 }
@@ -204,7 +203,7 @@ int
 rainContextRun(struct rainContext *ctx)
 {
 	struct rainCtxMsg msg;
-	int ret = rain_queue_pop(&ctx->mq,&msg);
+	int ret = rainMsgQueuePop(ctx->msgQue,&msg);
 	if(ret == 0){
 		if(msg.type & RAIN_MSG_REQ){
 			if(ctx->recv){
@@ -249,7 +248,7 @@ rainContextRun(struct rainContext *ctx)
 		}else{
 			RAIN_LOG(0,"Rid:%d,Unkonw Message TYPE%x",ctx->rid,msg.type);
 		}
-		if(rain_queue_size(&ctx->mq) == 0){
+		if(rainMsgQueueSize(ctx->msgQue) == 0){
 			__sync_val_compare_and_swap(&ctx->bdis,1,0);
 			return RAIN_ERROR;
 		}
@@ -273,7 +272,7 @@ rainContextPushMsg(struct rainContext *ctx,struct rainCtxMsg msg)
 {
 	assert(ctx);
 	if( __sync_bool_compare_and_swap(&ctx->bexit,false,false) ){
-		rain_queue_push(&ctx->mq,&msg);
+		rainMsgQueuePush(ctx->msgQue,msg);
 		_time_to_life(ctx);
 		return RAIN_OK;
 	}
@@ -348,9 +347,8 @@ rainContextUnRef(struct rainContext *ctx)
 	}
 }
 static void
-_del_msg(void *data)
+_del_msg(struct rainCtxMsg *rmsg)
 {
-	struct rainCtxMsg *rmsg = (struct rainCtxMsg *)data;
 	if((rmsg->type & RAIN_MSG_REQ) || (rmsg->type & RAIN_MSG_REQ)){
 		free(rmsg->u_data.msg);
 	}
@@ -358,25 +356,25 @@ _del_msg(void *data)
 static void
 _ctx_destroy(struct rainContext *ctx)
 {
-	rain_module_inst_destroy(ctx->mod,ctx->arg,ctx->exit_code);
-	int size = rain_array_size(&ctx->arr);
+	rainModuleInstDel(ctx->mod,ctx->arg,ctx->exit_code);
+	int size = wodArraySize(&ctx->arr);
 	if(size == 0){
-		rain_array_destroy(&ctx->arr);
+		wodArrayDestroy(&ctx->arr);
 	}else{
 		struct rainCtxMsg rmsg;
 		rainRoutine rids[size];
 		rmsg.src = ctx->rid;
 		rmsg.type = RAIN_MSG_EXIT;
 		rmsg.u_sz.exitcode = ctx->exit_code;
-		rain_array_erase(&ctx->arr,0,size,rids);
-		rain_array_destroy(&ctx->arr);
+		wodArrayErase(&ctx->arr,0,size,rids);
+		wodArrayDestroy(&ctx->arr);
 		int i=0;
 		for(i=0; i<size; i++){
 			rainHandlePushMsg(rids[i],rmsg);
 		}
 	}
-	rain_queue_destroy(&ctx->mq,_del_msg);
-	RAIN_LOG(0,"EXIT.ctx(%x.%s)",ctx->rid,rain_module_name(ctx->mod));
+	rainMsgQueueDelete(ctx->msgQue,_del_msg);
+	RAIN_LOG(0,"EXIT.ctx(%x.%s)",ctx->rid,rainModuleName(ctx->mod));
 	_time_exit();
 }
 int

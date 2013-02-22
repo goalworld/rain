@@ -2,21 +2,24 @@
 
 TOOLSET := target
 TARGET := test
-DEFS_Default := 
+DEFS_Default :=
 
 # Flags passed to all source files.
-CFLAGS_Default := -fPIC -Wall -g3
+CFLAGS_Default := \
+	-fPIC -Wall -g3
 
 # Flags passed to only C files.
-CFLAGS_C_Default := 
+CFLAGS_C_Default :=
 
 # Flags passed to only C++ files.
-CFLAGS_CC_Default := 
+CFLAGS_CC_Default :=
 
-INCS_Default := -Irain-src/include \
+INCS_Default := \
+	-Irain-src/include \
 	-Iroutine-src/test_routine
 
-OBJS := $(obj).target/$(TARGET)/routine-src/test_routine/test_main.o
+OBJS := \
+	$(obj).target/$(TARGET)/routine-src/test_routine/test_main.o
 
 # Add to the list of files we specially track dependencies for.
 all_deps += $(OBJS)
@@ -24,8 +27,8 @@ all_deps += $(OBJS)
 # CFLAGS et al overrides must be target-local.
 # See "Target-specific Variable Values" in the GNU Make manual.
 $(OBJS): TOOLSET := $(TOOLSET)
-$(OBJS): GYP_CFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE)) $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_C_$(BUILDTYPE))
-$(OBJS): GYP_CXXFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE)) $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_CC_$(BUILDTYPE))
+$(OBJS): GYP_CFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_C_$(BUILDTYPE))
+$(OBJS): GYP_CXXFLAGS := $(DEFS_$(BUILDTYPE)) $(INCS_$(BUILDTYPE))  $(CFLAGS_$(BUILDTYPE)) $(CFLAGS_CC_$(BUILDTYPE))
 
 # Suffix rules, putting all outputs into $(obj).
 
@@ -42,9 +45,10 @@ $(obj).$(TOOLSET)/$(TARGET)/%.o: $(obj)/%.c FORCE_DO_CMD
 
 # End of this set of suffix rules
 ### Rules for final target.
-LDFLAGS_Default := -Wl,-E -pg 
+LDFLAGS_Default := \
+	-Wl,-E -pg 
 
-LIBS := 
+LIBS :=
 
 $(obj).target/routine-src/libtest.so: GYP_LDFLAGS := $(LDFLAGS_$(BUILDTYPE))
 $(obj).target/routine-src/libtest.so: LIBS := $(LIBS)
