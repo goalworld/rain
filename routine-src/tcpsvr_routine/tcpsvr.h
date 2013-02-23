@@ -10,7 +10,7 @@
 #include "wod_cyclebuffer.h"
 #include <stdbool.h>
 #include <rain.h>
-#include <wod_ev.h>
+#include <wod_event.h>
 #include <wod_net.h>
 #define TCPSVR_MAX_CONNECT 4096
 struct tcpsvr_s;
