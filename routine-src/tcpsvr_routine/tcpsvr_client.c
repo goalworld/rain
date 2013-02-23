@@ -48,7 +48,7 @@ tcpclient_init(tcpclient_t * cli,wod_socket_t fd,int id)
 static inline void
 _release(tcpclient_t * cli)
 {
-	wod_close(cli->fd);
+	wod_net_close(cli->fd);
 	wod_cycle_buffer_destroy(&cli->cycle_wrbuf);
 	wod_cycle_buffer_destroy(&cli->cycle_rebuf);
 }
@@ -235,7 +235,7 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 		int wsz=0;
 		struct wod_socket_buf *tmpio = io;
 		for(;;){
-			int wret = wod_writev(cli->fd,tmpio,num);
+			int wret = wod_net_writev(cli->fd,tmpio,num);
 			if(wret<0){
 				if(errno == EAGAIN){
 					if(buf){
@@ -314,7 +314,7 @@ real_read(tcpclient_t * cli)
 			++num;
 			allsz +=pair.second.sz;
 		}
-		rret = wod_readv(cli->fd,io,num);
+		rret = wod_net_readv(cli->fd,io,num);
 		if(rret < 0){
 			wod_cycle_buffer_back(&cli->cycle_rebuf,allsz);
 			if(errno == EAGAIN){

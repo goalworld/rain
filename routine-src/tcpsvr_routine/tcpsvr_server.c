@@ -35,8 +35,8 @@ tcpsvr_run(tcpsvr_t* svr)
 int
 tcpsvr_listen(tcpsvr_t* svr,const char *host,int port)
 {
-	svr->fd = wod_tcp_listen(TCP4,host,port);
-	wod_set_noblock(svr->fd,1);
+	svr->fd = wod_net_tcp_listen(TCP4,host,port);
+	wod_net_noblock(svr->fd,1);
 	wod_event_io_add(svr->loop,svr->fd,WV_IO_READ,_doAccept,svr);
 	return RAIN_OK;
 }
@@ -45,7 +45,7 @@ _doAccept(struct wod_event_loop *loop,void * nv,int mask)
 {
 	tcpsvr_t *svr = (tcpsvr_t *)nv;
 	for(;;){
-		wod_socket_t cfd = wod_accept(svr->fd);
+		wod_socket_t cfd = wod_net_accept(svr->fd);
 		if(cfd < 0){
 			if(-cfd == EAGAIN){
 				break;
@@ -58,7 +58,7 @@ _doAccept(struct wod_event_loop *loop,void * nv,int mask)
 		if(cli){
 			tcpsvr_notifyconnect(svr,cli);
 		}else{
-			wod_close(cfd);
+			wod_net_close(cfd);
 		}
 	}
 }
@@ -84,8 +84,8 @@ _new_client(tcpsvr_t *svr,wod_socket_t fd)
 		return NULL;
 	}
 	cli->binuse = true;
-	wod_set_noblock(fd,1);
-	wod_set_keep_alive(fd,1);
+	wod_net_noblock(fd,1);
+	wod_net_keep_alive(fd,1);
 	++svr->num_cli;
 	return cli;
 }
