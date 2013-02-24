@@ -18,12 +18,12 @@ static inline int hash_func(int handle){
 	return handle % TCPSVR_MAX_CONNECT;
 }
 static void
-_doAccept(struct wod_event_loop *loop,void * nv,int mask);
+_doAccept(struct wod_event_main *loop,void * nv,int mask);
 static tcpclient_t * _new_client(tcpsvr_t *svr,int fd);
 int
 tcpsvr_run(tcpsvr_t* svr)
 {
-	wod_event_loop_loop(svr->loop);
+	wod_event_main_loop(svr->loop);
 	long long now = wod_event_time();
 	long long dif_time = now - svr->pre_loop_time;
 	if(dif_time < BLOCK_MIN_TIME){
@@ -41,7 +41,7 @@ tcpsvr_listen(tcpsvr_t* svr,const char *host,int port)
 	return RAIN_OK;
 }
 static void
-_doAccept(struct wod_event_loop *loop,void * nv,int mask)
+_doAccept(struct wod_event_main *loop,void * nv,int mask)
 {
 	tcpsvr_t *svr = (tcpsvr_t *)nv;
 	for(;;){

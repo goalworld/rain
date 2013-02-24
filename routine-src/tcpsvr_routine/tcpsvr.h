@@ -40,7 +40,7 @@ typedef struct tcpsvr_s
 	tcpclient_t clients[TCPSVR_MAX_CONNECT];
 	int num_cli;
 	int cut_index;
-	struct wod_event_loop *loop;
+	struct wod_event_main *loop;
 	long long pre_loop_time;
 	rainRoutine watchdog;
 	int headsz;

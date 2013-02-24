@@ -44,7 +44,7 @@ tcpsvrDelete(void *env,int code)
 	if(svr->fd >=0){
 		close(svr->fd);
 	}
-	wod_event_loop_delete(svr->loop);
+	wod_event_main_delete(svr->loop);
 	free(svr);
 }
 void *
@@ -101,14 +101,14 @@ tcpsvrNew(struct rainContext*ctx,char *args)
 	}
 	svr->watchdog = rids;
 	svr->headsz = headsz;
-	svr->loop = wod_event_loop_new(10240,flag);
+	svr->loop = wod_event_main_new(10240,flag);
 	if(!svr->loop){
 		free(svr);
 		return NULL;
 	}
 	int ret = tcpsvr_listen(svr,host,port);
 	if(ret == RAIN_ERROR){
-		wod_event_loop_delete(svr->loop);
+		wod_event_main_delete(svr->loop);
 		free(svr);
 		return NULL;
 	}
