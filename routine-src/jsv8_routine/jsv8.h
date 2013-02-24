@@ -46,7 +46,7 @@ private:
 	struct timer{
 		int repeat_;
 		v8::Persistent<v8::Function> cb_;
-		double times_;
+		int times_;
 	};
 	typedef std::map<uint32_t,timer> TimerMap;
 	typedef TimerMap::iterator TimerMapIter;

@@ -113,7 +113,7 @@ tcpsvrNew(struct rainContext*ctx,char *args)
 		return NULL;
 	}
 	RAIN_CALLBACK(ctx,_recv,_recv_rps,_link_exit,NULL,_next_tick);
-	svr->pre_loop_time = wod_event_time();
+	svr->pre_loop_time = wod_time_usecond();
 	rainNextTick(ctx,_svr_next_tick);
 	rainLink(ctx,svr->watchdog);
 	//rain_debug(svr->ctx,"<TCP-SERVER>: At(%s:%d),watcher:%d,mode:%s",host,port,rids,modbuf);

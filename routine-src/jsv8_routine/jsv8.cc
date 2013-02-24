@@ -531,7 +531,7 @@ jsv8_t::Timer(const v8::Arguments& args)
 	}else{
 		timr.repeat_ = -1;
 	}
-	timr.times_ = v8::Handle<Number>::Cast(args[1])->Value();
+	timr.times_ = v8::Handle<Integer>::Cast(args[1])->Value();
 	timr.cb_ =v8::Persistent<Function>::New(v8::Handle<Function>::Cast(args[0]));
 	js->timers_[id]=timr;
 	rainTimeout(js->ctx_,timr.times_,(void *)(ptrdiff_t)(id));

@@ -40,7 +40,7 @@ int rainSend(struct rainContext * ctx,rainRoutine dest, struct rainMsg msg,int c
 int rainResponce(struct rainContext *ctx,rainRoutine dest, struct rainMsg msg,int copy,rainSession se);
 int rainLink(struct rainContext *ctx,rainRoutine rid);//link rid的退出
 int rainNextTick(struct rainContext *ctx,void *user_data);//给自身发送一个消息-完成循环调用。
-int rainTimeout(struct rainContext *ctx,double timeout,void *user_data);
+int rainTimeout(struct rainContext *ctx,int ms,void *user_data);
 
 int rainKill(struct rainContext *ctx,rainRoutine rid,int code);//kill某个routine
 int rainRegistName(struct rainContext *ctx,const char *name);//注册名字unimp

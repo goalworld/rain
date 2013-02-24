@@ -28,8 +28,7 @@ OBJS := \
 	$(obj).target/$(TARGET)/rain-src/src/rain_start.o \
 	$(obj).target/$(TARGET)/rain-src/src/rain_rpc.o \
 	$(obj).target/$(TARGET)/rain-src/src/rain_timer.o \
-	$(obj).target/$(TARGET)/rain-src/src/rain_loger.o \
-	$(obj).target/$(TARGET)/rain-src/src/rain_utils.o
+	$(obj).target/$(TARGET)/rain-src/src/rain_loger.o
 
 # Add to the list of files we specially track dependencies for.
 all_deps += $(OBJS)

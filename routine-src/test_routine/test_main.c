@@ -39,7 +39,7 @@ testNew(struct rainContext *ctx,char *args)
 	}
 	rainLink(ctx,tt->tcpsvr_id);
 	RAIN_CALLBACK(ctx,_recv,_recv_rsp,_link_exit,_time_out,NULL);
-	rainTimeout(ctx,60.0,NULL);
+	rainTimeout(ctx,60*1000,NULL);
 	return tt;
 }
 void

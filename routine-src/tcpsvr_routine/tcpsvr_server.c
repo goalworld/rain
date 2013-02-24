@@ -24,10 +24,10 @@ int
 tcpsvr_run(tcpsvr_t* svr)
 {
 	wod_event_main_loop(svr->loop);
-	long long now = wod_event_time();
+	long long now = wod_time_usecond();
 	long long dif_time = now - svr->pre_loop_time;
 	if(dif_time < BLOCK_MIN_TIME){
-		wod_event_sleep(dif_time);
+		wod_time_sleep_usecond(dif_time);
 	}
 	svr->pre_loop_time = now;
 	return RAIN_OK;

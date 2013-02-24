@@ -9,15 +9,15 @@
 #include "rain_timer.h"
 #include <stdlib.h>
 #include "rain_mutex.h"
-#include "rain_utils.h"
+#include "wod_time.h"
 struct rainTimer
 {
 	rainRoutine ctx_id;
 	void* user_data;
 	//rain_ctx_t * ctx;
-	double timeout;
-	double now;
-	double lefttime;
+	long long timeout;
+	long long now;
+	long long lefttime;
 	struct rainTimer * next;
 };
 static void
@@ -35,7 +35,7 @@ struct rainTimerMgr
 {
 	struct rainTimer * head;
 	struct rainTimer * runhead;
-	double min;
+	long long min;
 	rainMutex mtx;
 };
 
@@ -51,7 +51,7 @@ rainTimerInit()
 	return RAIN_OK;
 }
 static inline void
-_test_swap(double newTime)
+_test_swap(long long newTime)
 {
 	if(newTime < mgr.min){
 		mgr.min = newTime;
@@ -64,7 +64,7 @@ rainTimerLoop()
 		struct rainTimer* pre = NULL;
 		struct rainTimer* tmp = mgr.runhead;
 		while(tmp){
-			double now = rainGetTime();
+			long long now = wod_time_usecond();
 			tmp->timeout -= (now-tmp->now);
 			tmp->now = now;
 			if(tmp->timeout <= 0.0){
@@ -96,11 +96,11 @@ rainTimerLoop()
 			mgr.head = NULL;
 			rainMutexUnLock(&mgr.mtx);
 		}
-		rainSleep(mgr.min);
+		wod_time_sleep_usecond(mgr.min);
 	}
 }
 int
-rainTimeout(struct rainContext *ctx,double timeout,void *user_data)
+rainTimeout(struct rainContext *ctx,int timeout,void *user_data)
 {
 	if(!ctx || timeout<=0.0 ){
 		return RAIN_ERROR;
@@ -108,8 +108,8 @@ rainTimeout(struct rainContext *ctx,double timeout,void *user_data)
 	struct rainTimer * p = malloc(sizeof(struct rainTimer));
 	p->ctx_id = rainRoutineId(ctx);
 	p->user_data = user_data;
-	p->timeout = timeout;
-	p->now = rainGetTime();
+	p->timeout = timeout*1000;
+	p->now = wod_time_usecond();
 	//p->ctx = ctx;
 	rainMutexLock(&mgr.mtx);
 	p->next = mgr.head;

@@ -12,6 +12,7 @@
 #include <rain.h>
 #include <wod_event.h>
 #include <wod_net.h>
+#include <wod_time.h>
 #define TCPSVR_MAX_CONNECT 4096
 struct tcpsvr_s;
 enum

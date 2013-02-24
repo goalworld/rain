@@ -21,8 +21,7 @@
 				"src/rain_start.c",
 				"src/rain_rpc.c",
 				"src/rain_timer.c",
-				"src/rain_loger.c",
-				"src/rain_utils.c"
+				"src/rain_loger.c"
 			],
 			"libraries":['-ldl','-lpthread',"-lm","-lwod"],
 		},
