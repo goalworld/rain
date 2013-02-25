@@ -22,6 +22,7 @@
 #include "rain_loger.h"
 #include "rain_msgqueue.h"
 #include <wod_time.h>
+#include <wod_sys.h>
 static int rainDispatchRoutine(void);
 static void * worker(void *arg);
 static void * evloop(void *arg);
@@ -97,7 +98,7 @@ worker(void *arg)
 	pthread_detach(pthread_self());
 	for(;;){
 		if(RAIN_ERROR == rainDispatchRoutine()){
-			wod_time_sleep_usecond(100000);
+			wod_sys_usleep(100000);
 		}
 	}
 	return (void *)(0);
@@ -107,7 +108,7 @@ evloop(void *arg)
 {
 	for(;;){
 		rainTimerLoop();
-		wod_time_sleep_usecond(100000);
+		wod_sys_usleep(100000);
 	}
 	return (void *)(0);
 }

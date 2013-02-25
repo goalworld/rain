@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <wod_sys.h>
 #define BLOCK_MIN_TIME 50000
 
 static inline int hash_func(int handle){
@@ -27,7 +28,7 @@ tcpsvr_run(tcpsvr_t* svr)
 	long long now = wod_time_usecond();
 	long long dif_time = now - svr->pre_loop_time;
 	if(dif_time < BLOCK_MIN_TIME){
-		wod_time_sleep_usecond(dif_time);
+		wod_sys_usleep(dif_time);
 	}
 	svr->pre_loop_time = now;
 	return RAIN_OK;

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "rain_mutex.h"
 #include "wod_time.h"
+#include <wod_sys.h>
 struct rainTimer
 {
 	rainRoutine ctx_id;
@@ -96,7 +97,7 @@ rainTimerLoop()
 			mgr.head = NULL;
 			rainMutexUnLock(&mgr.mtx);
 		}
-		wod_time_sleep_usecond(mgr.min);
+		wod_sys_usleep(mgr.min);
 	}
 }
 int
