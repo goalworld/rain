@@ -24,7 +24,7 @@ static tcpclient_t * _new_client(tcpsvr_t *svr,int fd);
 int
 tcpsvr_run(tcpsvr_t* svr)
 {
-	wod_event_main_loop(svr->loop);
+	wod_event_main_once(svr->loop);
 	long long now = wod_time_usecond();
 	long long dif_time = now - svr->pre_loop_time;
 	if(dif_time < BLOCK_MIN_TIME){
