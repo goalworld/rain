@@ -23,26 +23,26 @@ public:
 	static v8::Handle<v8::Value> Exit(const v8::Arguments& args);
 	static v8::Handle<v8::Value> Timer(const v8::Arguments& args);
 private:
-	static  void _recv(void *arg,rainRoutine src,struct rainMsg msg,rainSession session);
-	static  void _recv_rsp(void *arg,rainRoutine src,struct rainMsg msg,rainSession session);
-	static  void _link(void *arg,rainRoutine exit,int code);
+	static  void _recv(void *arg,rain_routine_t src,struct rainMsg msg,rain_session_t session);
+	static  void _recv_rsp(void *arg,rain_routine_t src,struct rainMsg msg,rain_session_t session);
+	static  void _link(void *arg,rain_routine_t exit,int code);
 	static  void _next_tick(void *arg,void *userdata);
 	static  void _time_out(void *arg,void *userdata);
 public:
 	jsv8_t();
 	~jsv8_t();
-	bool Initialize(struct rainContext *ctx,const std::string & args);
+	bool Initialize(struct rain_ctx *ctx,const std::string & args);
 	void Exit(int code);
 private:
 	int Run();
 	v8::Handle<v8::Object> SteupRoutine(const std::string & args);
-	void Recv(rainRoutine src,struct rainMsg msg,rainSession session);
-	void RecvResponce(rainRoutine src,struct rainMsg msg,rainSession session);
-	void Link(rainRoutine exit,int code);
+	void Recv(rain_routine_t src,struct rainMsg msg,rain_session_t session);
+	void RecvResponce(rain_routine_t src,struct rainMsg msg,rain_session_t session);
+	void Link(rain_routine_t exit,int code);
 	typedef std::map<long,jsv8_ctx_t *> RelationMap;
 	typedef RelationMap::iterator RelationMapIter;
 	RelationMap relates_;
-	struct rainContext* ctx_;
+	struct rain_ctx* ctx_;
 	struct timer{
 		int repeat_;
 		v8::Persistent<v8::Function> cb_;

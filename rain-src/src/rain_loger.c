@@ -10,12 +10,12 @@
 #include <stdio.h>
 #include "rain_context.h"
 int
-rainLogInit()
+rain_log_init()
 {
 	return RAIN_OK;
 }
 void
-rainLogError(const char *filename,int line,const char *fmt,...)
+rain_log(const char *filename,int line,const char *fmt,...)
 {
 	char buf[8096];
 	va_list args;
@@ -25,7 +25,7 @@ rainLogError(const char *filename,int line,const char *fmt,...)
 	printf("[RAIN-SYS-LOG]\t(%s@%d)\r\n\t\t[$CODE]====>(%s)\n",filename,line,buf);
 }
 int
-rainDebug(struct rainContext *ctx,const char *fmt,...)
+rain_debug(struct rain_ctx *ctx,const char *fmt,...)
 {
 	if(!ctx){
 		return RAIN_ERROR;
@@ -35,6 +35,6 @@ rainDebug(struct rainContext *ctx,const char *fmt,...)
 	va_start(args,fmt);
 	vsnprintf(buf,sizeof(buf),fmt,args);
 	va_end(args);
-	printf("[RAIN-USR-DBG]\t[CTX(%x.%s)]\r\n\t\t[$CODE::%s]\n",rainContextGetId(ctx),rainContextModName(ctx),buf);
+	printf("[RAIN-USR-DBG]\t[CTX(%x.%s)]\r\n\t\t[$CODE::%s]\n",rain_ctx_get_id(ctx),rain_ctx_mod_name(ctx),buf);
 	return RAIN_OK;
 }

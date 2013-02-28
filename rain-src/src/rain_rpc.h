@@ -10,6 +10,6 @@
 #include "rain_type.h"
 #include "rain_msg.h"
 int rainRpcInit();
-int rainRpcSend(rainRoutine dest, struct rainCtxMsg msg);
+int rainRpcSend(rain_routine_t dest, struct rain_ctx_message msg);
 
 #endif /* RAIN_PROXY_RPC_H_ */

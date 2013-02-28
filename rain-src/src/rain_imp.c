@@ -12,41 +12,41 @@
 #include <memory.h>
 #include <assert.h>
 int
-rainSpawn(struct rainContext * ctx,const char * mod,const char *args,rainRoutine * rid)
+rain_spawn(struct rain_ctx * ctx,const char * mod,const char *args,rain_routine_t * rid)
 {
 	assert(ctx);
 	if(!ctx){
 		return RAIN_ERROR;
 	}
-	struct rainContext * new_ctx = rainContextNew(rainContextGetId(ctx),mod,args);
+	struct rain_ctx * new_ctx = rain_ctx_new(rain_ctx_get_id(ctx),mod,args);
 	if(new_ctx != NULL){
 		if(rid){
-			*rid = rainContextGetId(new_ctx);
+			*rid = rain_ctx_get_id(new_ctx);
 		}
 		return RAIN_OK;
 	}
 	return RAIN_ERROR;
 }
-rainRoutine
-rainRoutineId(struct rainContext *ctx)
+rain_routine_t
+rain_routine_id(struct rain_ctx *ctx)
 {
 	if(ctx == NULL){
 		return  RAIN_INVALID_ID;
 	}else{
-		return rainContextGetId(ctx);
+		return rain_ctx_get_id(ctx);
 	}
 }
-rainRoutine
-rainPRoutineId(struct rainContext *ctx)//获取id
+rain_routine_t
+rain_routine_pid(struct rain_ctx *ctx)//获取id
 {
 	if(ctx == NULL){
 		return  RAIN_INVALID_ID;
 	}else{
-		return rainContextGetPId(ctx);
+		return rain_ctx_get_pid(ctx);
 	}
 }
 static inline int
-_is_active_id(rainRoutine id)
+_is_active_id(rain_routine_t id)
 {
 	if(id == RAIN_INVALID_ID){
 		return RAIN_ERROR;
@@ -54,18 +54,18 @@ _is_active_id(rainRoutine id)
 	return RAIN_OK;
 }
 static inline int
-_send(rainRoutine dest,struct rainCtxMsg msg)
+_send(rain_routine_t dest,struct rain_ctx_message msg)
 {
-	if(rainHandleLocal(dest) == RAIN_OK){
-		return rainHandlePushMsg(dest,msg);
+	if(rain_handle_get_localid(dest) == RAIN_OK){
+		return rain_handle_push_message(dest,msg);
 	}else{
 		//TODO RPC
 		return RAIN_ERROR;
 	}
 }
 int
-rainSend(struct rainContext * ctx,rainRoutine dest,
-		struct rainMsg msg,int bcopy,rainSession * se/*in out*/)
+rain_send(struct rain_ctx * ctx,rain_routine_t dest,
+		struct rainMsg msg,int bcopy,rain_session_t * se/*in out*/)
 {
 	if(!ctx){
 		return RAIN_ERROR;
@@ -84,13 +84,13 @@ rainSend(struct rainContext * ctx,rainRoutine dest,
 	}else{
 		tmp_data = msg.data;
 	}
-	struct rainCtxMsg rmsg;
+	struct rain_ctx_message rmsg;
 	rmsg.u_data.msg = tmp_data;
 	rmsg.u_sz.sz = msg.sz;
 	rmsg.type = msg.type|RAIN_MSG_REQ;
-	rmsg.src = rainContextGetId(ctx);
+	rmsg.src = rain_ctx_get_id(ctx);
 	if(se){
-		*se = rainContextSession(ctx);
+		*se = rain_ctx_genter_session(ctx);
 		rmsg.session = *se;
 	}else{
 		rmsg.session = RAIN_INVALID_SESSION;
@@ -98,7 +98,7 @@ rainSend(struct rainContext * ctx,rainRoutine dest,
 	return _send(dest,rmsg);
 }
 int
-rainResponce(struct rainContext *ctx,rainRoutine dest, struct rainMsg msg,int bcopy,rainSession se)
+rain_responce(struct rain_ctx *ctx,rain_routine_t dest, struct rainMsg msg,int bcopy,rain_session_t se)
 {
 	if(!ctx || se == RAIN_INVALID_SESSION){
 		return RAIN_ERROR;
@@ -116,26 +116,26 @@ rainResponce(struct rainContext *ctx,rainRoutine dest, struct rainMsg msg,int bc
 	}else{
 		tmp_data = msg.data;
 	}
-	struct rainCtxMsg rmsg;
+	struct rain_ctx_message rmsg;
 	rmsg.u_data.msg = tmp_data;
 	rmsg.u_sz.sz = msg.sz;
 	rmsg.type = msg.type|RAIN_MSG_RSP;
-	rmsg.src = rainContextGetId(ctx);
+	rmsg.src = rain_ctx_get_id(ctx);
 	rmsg.session = se;
 	return _send(dest,rmsg);
 }
 
 int
-rainKill(struct rainContext *ctx,rainRoutine rid,int code)
+rain_kill(struct rain_ctx *ctx,rain_routine_t rid,int code)
 {
 	if(!ctx){
 		return RAIN_ERROR;
 	}else{
-		if(rainContextGetId(ctx) == rid){
+		if(rain_ctx_get_id(ctx) == rid){
 			return RAIN_ERROR;
 		}
-		if(rainHandleLocal(rid) == RAIN_OK){
-			return rainHandleKill(rid,code);
+		if(rain_handle_get_localid(rid) == RAIN_OK){
+			return rain_handle_kill(rid,code);
 		}else{
 			//TODO
 			return RAIN_ERROR;
@@ -143,19 +143,19 @@ rainKill(struct rainContext *ctx,rainRoutine rid,int code)
 	}
 }
 int
-rainLink(struct rainContext *ctx,rainRoutine rid)
+rain_link(struct rain_ctx *ctx,rain_routine_t rid)
 {
 	if(!ctx){
 		return RAIN_ERROR;
 	}
-	if(rainHandleLocal(rid) == RAIN_OK ){
-		if(rainContextGetId(ctx) == rid){
+	if(rain_handle_get_localid(rid) == RAIN_OK ){
+		if(rain_ctx_get_id(ctx) == rid){
 			return RAIN_ERROR;
 		}
-		struct rainContext *dest_ctx = rainHandleQuery(rid,true);
+		struct rain_ctx *dest_ctx = rain_handle_query_ctx(rid,true);
 		if(dest_ctx){
-			int ret = rainContextAddLink(dest_ctx,rainContextGetId(ctx));
-			rainContextUnRef(dest_ctx);
+			int ret = rain_ctx_add_link(dest_ctx,rain_ctx_get_id(ctx));
+			rain_ctx_unref(dest_ctx);
 			return ret;
 		}else{
 			return RAIN_ERROR;

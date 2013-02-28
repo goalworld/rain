@@ -16,8 +16,8 @@ enum{
 	RAIN_MSG_EXIT	=	0X100000,
 };
 
-struct rainCtxMsg{
-	rainRoutine src;
+struct rain_ctx_message{
+	rain_routine_t src;
 	union{
 		void *msg;
 		void *tick_data;
@@ -30,7 +30,7 @@ struct rainCtxMsg{
 		int exitcode;
 	}u_sz;
 	int type;
-	rainSession session;
+	rain_session_t session;
 };
 
 #endif /* RAIN_MSG_H_ */

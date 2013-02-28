@@ -114,7 +114,7 @@ tcpsvr_notifyconnect(tcpsvr_t * svr,tcpclient_t * cli)
 	msg.data = &cli->id;
 	msg.sz = sizeof(cli->id);
 	msg.type = CONNECT;
-	rainSend(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
+	rain_send(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
 }
 void
 tcpsvr_notifyread(tcpsvr_t * svr,tcpclient_t * cli ,void *buf,int sz)
@@ -124,7 +124,7 @@ tcpsvr_notifyread(tcpsvr_t * svr,tcpclient_t * cli ,void *buf,int sz)
 	msg.data = buf;
 	msg.sz = sz;
 	msg.type = MESSAGE;
-	rainSend(svr->ctx,svr->watchdog,msg,RAIN_NOCOPY,NULL);
+	rain_send(svr->ctx,svr->watchdog,msg,RAIN_NOCOPY,NULL);
 }
 void
 tcpsvr_notifyclose(tcpsvr_t * svr,tcpclient_t * cli)
@@ -133,7 +133,7 @@ tcpsvr_notifyclose(tcpsvr_t * svr,tcpclient_t * cli)
 	msg.data = &cli->id;
 	msg.sz = sizeof(cli->id);
 	msg.type = CLOSE;
-	rainSend(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
+	rain_send(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
 	tcpclient_destroy(cli);
 }
 void
@@ -144,7 +144,7 @@ tcpsvr_notifyerror(tcpsvr_t *svr,tcpclient_t *cli)
 	msg.data = &cli->id;
 	msg.sz = sizeof(cli->id);
 	msg.type = ERROR;
-	rainSend(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
+	rain_send(svr->ctx,svr->watchdog,msg,RAIN_COPY,NULL);
 	svr->num_cli -- ;
 	cli->binuse = false;
 }

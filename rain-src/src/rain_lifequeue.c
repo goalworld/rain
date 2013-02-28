@@ -22,63 +22,63 @@ struct rainLifeQueue
 	pthread_mutex_t mtx;
 	pthread_cond_t con;
 #else
-	rainMutex mtx;
+	rain_mutex mtx;
 #endif
 };
 static struct rainLifeQueue * LQ = NULL;
 
 int
-rainLifeQueueInit()
+rain_life_queue_init()
 {
 	LQ = malloc(sizeof(struct rainLifeQueue));
 #ifdef PTHREAD_LOCK
 	pthread_mutex_init(&LQ->mtx,NULL);
 	pthread_cond_init(&LQ->con,NULL);
 #else
-	rainMutexInit(&LQ->mtx);
+	rain_mutex_init(&LQ->mtx);
 #endif
-	return wod_queue_init(&LQ->r_queue,sizeof(rainRoutine));
+	return wod_queue_init(&LQ->r_queue,sizeof(rain_routine_t));
 }
 void
-rainLifeQueuePush(rainRoutine rid)
+rain_life_queue_push(rain_routine_t rid)
 {
 	struct rainLifeQueue* lq = LQ;
 #ifdef PTHREAD_LOCK
 	pthread_mutex_lock(&lq->mtx);
 #else
-	rainMutexLock(&lq->mtx);
+	rain_mutex_lock(&lq->mtx);
 #endif
 	wod_queue_push(&lq->r_queue,&rid);
 #ifdef PTHREAD_LOCK
 	pthread_cond_signal(&lq->con);
 	pthread_mutex_unlock(&lq->mtx);
 #else
-	rainMutexUnLock(&lq->mtx);
+	rain_mutex_unlock(&lq->mtx);
 #endif
 }
 int
-rainLifeQueuePop(rainRoutine *rid)
+rain_life_queue_pop(rain_routine_t *rid)
 {
 	assert(rid);
 	struct rainLifeQueue* lq = LQ;
 #ifdef PTHREAD_LOCK
 	pthread_mutex_lock(&lq->mtx);
 #else
-	rainMutexLock(&lq->mtx);
+	rain_mutex_lock(&lq->mtx);
 #endif
 	if( wod_queue_pop(&lq->r_queue,rid) != 0){
 #ifdef PTHREAD_LOCK
 		pthread_cond_wait(&lq->con,&lq->mtx);
 		pthread_mutex_unlock(&lq->mtx);
 #else
-		rainMutexUnLock(&lq->mtx);
+		rain_mutex_unlock(&lq->mtx);
 #endif
 		return RAIN_ERROR;
 	}
 #ifdef PTHREAD_LOCK
 	pthread_mutex_unlock(&lq->mtx);
 #else
-	rainMutexUnLock(&lq->mtx);
+	rain_mutex_unlock(&lq->mtx);
 #endif
 	return RAIN_OK;
 }

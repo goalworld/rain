@@ -7,11 +7,11 @@
 
 #ifndef RAIN_MODULE_H_
 #define RAIN_MODULE_H_
-struct rainContext;
-struct rainModule;
-int rainModuleInit(const char * mod_path);
-struct rainModule * rainModuleQuery(const char * mod_name);
-void * rainModuleInstNew(struct rainModule *mod,struct rainContext *ctx,const char *args);
-void rainModuleInstDel(struct rainModule *mod,void *env,int code);
-const char* rainModuleName(struct rainModule *mod);
+struct rain_ctx;
+struct rain_moudle;
+int rain_moudle_init(const char * mod_path);
+struct rain_moudle * rain_module_query(const char * mod_name);
+void * rain_module_instance_init(struct rain_moudle *mod,struct rain_ctx *ctx,const char *args);
+void rain_module_init_destroy(struct rain_moudle *mod,void *env,int code);
+const char* rain_module_get_name(struct rain_moudle *mod);
 #endif /* RAIN_MODULE_H_ */

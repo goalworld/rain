@@ -23,29 +23,29 @@
 #include "rain_msgqueue.h"
 #include <wod_time.h>
 #include <wod_sys.h>
-static int rainDispatchRoutine(void);
+static int rain_dipatch_routine(void);
 static void * worker(void *arg);
-static void * evloop(void *arg);
+static void * timer_loop(void *arg);
 static void   _sigInit(void);
 
 int
 main(int argc,char *argv[])
 {
 	assert(argc >=3);
-	rainLogInit();
-	rainContextInit(154);
+	rain_log_init();
+	rain_ctx_init(154);
 	char *dir = malloc(1024);
 	getcwd(dir,1024);
 	strcat(dir,"/routine/");
 	//printf("dir:%s %s %s %s\n",dir,argv[0],argv[1],argv[2]);
-	rainModuleInit(dir);
+	rain_moudle_init(dir);
 	free(dir);
-	rainTimerInit();
+	rain_timer_init();
 	rainRpcInit();
-	rainLifeQueueInit();
-	rainMsgQueueInit();
+	rain_life_queue_init();
+	rain_message_queue_init();
 	_sigInit();
-	struct rainContext * ctx = rainContextNew(0,argv[1],argv[2]);
+	struct rain_ctx * ctx = rain_ctx_new(0,argv[1],argv[2]);
 	if(ctx == NULL){
 		exit(-1);
 	}
@@ -56,7 +56,7 @@ main(int argc,char *argv[])
 	for(i=0; i<len; i++){
 		pthread_create(&threads[i],NULL,worker,NULL);
 	}
-	evloop(NULL);
+	timer_loop(NULL);
 	/*
 	pthread_t thread_ev;
 	pthread_create(&thread_ev,NULL,evloop,NULL);
@@ -73,17 +73,17 @@ _sigInit(void)
 	signal(SIGPIPE,SIG_IGN);
 }
 static int
-rainDispatchRoutine(void)
+rain_dipatch_routine(void)
 {
-	rainRoutine rid;
-	int ret = rainLifeQueuePop(&rid);
+	rain_routine_t rid;
+	int ret = rain_life_queue_pop(&rid);
 	if(ret == RAIN_OK){
-		struct rainContext * ctx = rainHandleQuery(rid,false);
+		struct rain_ctx * ctx = rain_handle_query_ctx(rid,false);
 		if(ctx){
-			ret = rainContextRun(ctx);
-			rainContextUnRef(ctx);
+			ret = rain_ctx_run(ctx);
+			rain_ctx_unref(ctx);
 			if(ret == RAIN_OK){
-				rainLifeQueuePush(rid);
+				rain_life_queue_push(rid);
 			}
 		}else{
 			RAIN_LOG(0,"UNKNOW CTX %x\n",rid);
@@ -97,17 +97,17 @@ worker(void *arg)
 {
 	pthread_detach(pthread_self());
 	for(;;){
-		if(RAIN_ERROR == rainDispatchRoutine()){
+		if(RAIN_ERROR == rain_dipatch_routine()){
 			wod_sys_usleep(100000);
 		}
 	}
 	return (void *)(0);
 }
 static void *
-evloop(void *arg)
+timer_loop(void *arg)
 {
 	for(;;){
-		rainTimerLoop();
+		rain_timer_loop();
 		wod_sys_usleep(100000);
 	}
 	return (void *)(0);

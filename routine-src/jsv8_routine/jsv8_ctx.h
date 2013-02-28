@@ -20,16 +20,16 @@ public:
 	static v8::Handle<v8::Value> Responce(const v8::Arguments &arg);
 	static v8::Handle<v8::Value> Kill(const v8::Arguments &arg);
 public:
-	jsv8_ctx_t(struct rainContext* ctx,rainRoutine destid):ctx_(ctx),destid_(destid){};
+	jsv8_ctx_t(struct rain_ctx* ctx,rain_routine_t destid):ctx_(ctx),destid_(destid){};
 	~jsv8_ctx_t();
-	typedef std::map< rainSession,v8::Persistent<v8::Function> > FunctionMap;
+	typedef std::map< rain_session_t,v8::Persistent<v8::Function> > FunctionMap;
 	typedef FunctionMap::iterator FunctionMapItr;
 
 	v8::Persistent<v8::Function> recv_cb;
 	v8::Persistent<v8::Function> exit_cb;
 	FunctionMap func_map_;
-	struct rainContext* ctx_;
-	rainRoutine destid_;
+	struct rain_ctx* ctx_;
+	rain_routine_t destid_;
 };
 
 #endif /* JSV8_RAIN_CTX_H_ */

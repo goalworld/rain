@@ -10,21 +10,21 @@
 #include <stdbool.h>
 #include "rain_type.h"
 #include "rain_msg.h"
-int rainContextInit(int rainid);
-struct rainContext * rainContextNew(rainRoutine prid,const char * mod,const char *args);
-const char * rainContextModName(struct rainContext *ctx);
-rainRoutine	 rainContextGetId(struct rainContext *ctx);
-rainRoutine	 rainContextGetPId(struct rainContext *ctx);
-int rainContextAddLink(struct rainContext *ctx,rainRoutine rid);
-rainSession rainContextSession(struct rainContext *ctx);
-int rainContextRun(struct rainContext *ctx);
-int rainContextPushMsg(struct rainContext *ctx,struct rainCtxMsg msg);
-void rainContextRef(struct rainContext *ctx);
-void rainContextUnRef(struct rainContext *ctx);
+int rain_ctx_init(int rainid);
+struct rain_ctx * rain_ctx_new(rain_routine_t prid,const char * mod,const char *args);
+const char * rain_ctx_mod_name(struct rain_ctx *ctx);
+rain_routine_t	 rain_ctx_get_id(struct rain_ctx *ctx);
+rain_routine_t	 rain_ctx_get_pid(struct rain_ctx *ctx);
+int rain_ctx_add_link(struct rain_ctx *ctx,rain_routine_t rid);
+rain_session_t rain_ctx_genter_session(struct rain_ctx *ctx);
+int rain_ctx_run(struct rain_ctx *ctx);
+int rain_ctx_push_message(struct rain_ctx *ctx,struct rain_ctx_message msg);
+void rain_ctx_ref(struct rain_ctx *ctx);
+void rain_ctx_unref(struct rain_ctx *ctx);
 
-struct rainContext * rainHandleQuery(rainRoutine rid,bool blog);
-int rainHandlePushMsg(rainRoutine dest, struct rainCtxMsg msg);
-int rainHandleLocal(rainRoutine rid);
-int rainHandleKill(rainRoutine rid,int code);
+struct rain_ctx * rain_handle_query_ctx(rain_routine_t rid,bool blog);
+int rain_handle_push_message(rain_routine_t dest, struct rain_ctx_message msg);
+int rain_handle_get_localid(rain_routine_t rid);
+int rain_handle_kill(rain_routine_t rid,int code);
 
 #endif /* RAIN_CTX_H_ */

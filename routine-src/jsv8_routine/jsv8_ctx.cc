@@ -85,14 +85,14 @@ jsv8_ctx_t::Send(const v8::Arguments &args)
 	}
 	int ret;
 	if(args.Length() > 1 && args[1]->IsFunction()){
-		rainSession se;
-		ret = rainSend(ptr->ctx_,ptr->destid_,msg,RAIN_COPY,&se);
+		rain_session_t se;
+		ret = rain_send(ptr->ctx_,ptr->destid_,msg,RAIN_COPY,&se);
 		if(ret == RAIN_OK){
 			ptr->func_map_[se] =
 					v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(args[1]));
 		}
 	}else{
-		ret =rainSend(ptr->ctx_,ptr->destid_,msg,RAIN_COPY,NULL);
+		ret =rain_send(ptr->ctx_,ptr->destid_,msg,RAIN_COPY,NULL);
 	}
 	if(ret == RAIN_OK){
 		return scope.Close(v8::Boolean::New(true));
@@ -126,8 +126,8 @@ jsv8_ctx_t::Responce(const v8::Arguments &args)
 	}else{
 		msg.type = v8_msg->Get(v8::String::New("type"))->ToInt32()->Value();
 	}
-	rainSession session = args[1]->ToInt32()->Value();
-	int ret =rainResponce(ptr->ctx_,ptr->destid_,msg,RAIN_COPY,session);
+	rain_session_t session = args[1]->ToInt32()->Value();
+	int ret =rain_responce(ptr->ctx_,ptr->destid_,msg,RAIN_COPY,session);
 
 	if(ret == RAIN_OK){
 		return scope.Close(v8::Boolean::New(true));
@@ -160,7 +160,7 @@ jsv8_ctx_t::On(const v8::Arguments &args)
 		jsv8_ctx_t * ptr =  get_cppobj_ptr<jsv8_ctx_t>(args.Holder());
 		ptr->exit_cb =
 				v8::Persistent<Function>::New(v8::Handle<Function>::Cast(args[1]));
-		rainLink(ptr->ctx_,ptr->destid_);
+		rain_link(ptr->ctx_,ptr->destid_);
 		return scope.Close(v8::Boolean::New(true));
 	}else{
 		ThrowException(String::New("argument 0:need a String of message or exit"));
@@ -172,6 +172,6 @@ jsv8_ctx_t::Kill(const v8::Arguments &args)
 {
 	HandleScope scope;
 	jsv8_ctx_t * ptr =  get_cppobj_ptr<jsv8_ctx_t>(args.Holder());
-	rainKill(ptr->ctx_,ptr->destid_,0);
+	rain_kill(ptr->ctx_,ptr->destid_,0);
 	return v8::Undefined();
 }

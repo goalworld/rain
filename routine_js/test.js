@@ -24,7 +24,7 @@ function newAdd(){
 			addRt.Send({data:JSON.stringify(data),type:1},function(msg){
 				print("Add:Responce",JSON.stringify(msg));
 			});
-		},0.1);
+		},100);
 		addRt.On('exit',function (code){
 			if(code == 0){
 				print("ADD exit normal");

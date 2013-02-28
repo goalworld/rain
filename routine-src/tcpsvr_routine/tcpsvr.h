@@ -36,14 +36,14 @@ typedef struct tcpclient_s
 typedef struct tcpsvr_s
 {
 	wod_socket_t fd;
-	struct rainContext * ctx;
+	struct rain_ctx * ctx;
 	char *args;
 	tcpclient_t clients[TCPSVR_MAX_CONNECT];
 	int num_cli;
 	int cut_index;
 	struct wod_event_main *loop;
 	long long pre_loop_time;
-	rainRoutine watchdog;
+	rain_routine_t watchdog;
 	int headsz;
 	long all_recv;
 	bool bInit;

@@ -13,7 +13,7 @@
 #include <wod_sys.h>
 struct rainTimer
 {
-	rainRoutine ctx_id;
+	rain_routine_t ctx_id;
 	void* user_data;
 	//rain_ctx_t * ctx;
 	long long timeout;
@@ -24,11 +24,11 @@ struct rainTimer
 static void
 _pending_times(struct rainTimer* timer)
 {
-	struct rainCtxMsg msg;
+	struct rain_ctx_message msg;
 	msg.type = RAIN_MSG_TIMER;
 	msg.u_data.time_data = timer->user_data;
 	//msg.u_data.time_data = timer->ext_data;
-	rainHandlePushMsg(timer->ctx_id,msg);
+	rain_handle_push_message(timer->ctx_id,msg);
 	//rain_ctx_pushmsg(timer->ctx,msg);
 }
 
@@ -37,16 +37,16 @@ struct rainTimerMgr
 	struct rainTimer * head;
 	struct rainTimer * runhead;
 	long long min;
-	rainMutex mtx;
+	rain_mutex mtx;
 };
 
 static struct  rainTimerMgr mgr;
 
 int
-rainTimerInit()
+rain_timer_init()
 {
 	mgr.head = NULL;
-	rainMutexInit(&mgr.mtx);
+	rain_mutex_init(&mgr.mtx);
 	mgr.runhead = NULL;
 	mgr.min = 1.0;
 	return RAIN_OK;
@@ -59,7 +59,7 @@ _test_swap(long long newTime)
 	}
 }
 void
-rainTimerLoop()
+rain_timer_loop()
 {
 	for(;;){
 		struct rainTimer* pre = NULL;
@@ -80,43 +80,43 @@ rainTimerLoop()
 				free(tf);
 				continue;
 			}else{
-				rainMutexLock(&mgr.mtx);
+				rain_mutex_lock(&mgr.mtx);
 				_test_swap(tmp->timeout);
-				rainMutexUnLock(&mgr.mtx);
+				rain_mutex_unlock(&mgr.mtx);
 			}
 			pre = tmp;
 			tmp = tmp->next;
 		}
 		if(mgr.head){
-			rainMutexLock(&mgr.mtx);
+			rain_mutex_lock(&mgr.mtx);
 			if(pre){
 				pre->next = mgr.head;
 			}else{
 				mgr.runhead = mgr.head;
 			}
 			mgr.head = NULL;
-			rainMutexUnLock(&mgr.mtx);
+			rain_mutex_unlock(&mgr.mtx);
 		}
 		wod_sys_usleep(mgr.min);
 	}
 }
 int
-rainTimeout(struct rainContext *ctx,int timeout,void *user_data)
+rain_timeout(struct rain_ctx *ctx,int timeout,void *user_data)
 {
 	if(!ctx || timeout<=0.0 ){
 		return RAIN_ERROR;
 	}
 	struct rainTimer * p = malloc(sizeof(struct rainTimer));
-	p->ctx_id = rainRoutineId(ctx);
+	p->ctx_id = rain_routine_id(ctx);
 	p->user_data = user_data;
 	p->timeout = timeout*1000;
 	p->now = wod_time_usecond();
 	//p->ctx = ctx;
-	rainMutexLock(&mgr.mtx);
+	rain_mutex_lock(&mgr.mtx);
 	p->next = mgr.head;
 	mgr.head = p;
 	_test_swap(timeout);
-	rainMutexUnLock(&mgr.mtx);
+	rain_mutex_unlock(&mgr.mtx);
 	return RAIN_OK;
 }
 
