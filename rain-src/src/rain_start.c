@@ -22,11 +22,10 @@
 #include "rain_loger.h"
 #include "rain_msgqueue.h"
 #include <wod_time.h>
-#include <wod_sys.h>
 static int rain_dipatch_routine(void);
 static void * worker(void *arg);
 static void * timer_loop(void *arg);
-static void   _sigInit(void);
+static void   sig_init(void);
 
 int
 main(int argc,char *argv[])
@@ -44,7 +43,7 @@ main(int argc,char *argv[])
 	rainRpcInit();
 	rain_life_queue_init();
 	rain_message_queue_init();
-	_sigInit();
+	sig_init();
 	struct rain_ctx * ctx = rain_ctx_new(0,argv[1],argv[2]);
 	if(ctx == NULL){
 		exit(-1);
@@ -68,7 +67,7 @@ main(int argc,char *argv[])
 	exit(0);
 }
 static void
-_sigInit(void)
+sig_init(void)
 {
 	signal(SIGPIPE,SIG_IGN);
 }
@@ -98,7 +97,7 @@ worker(void *arg)
 	pthread_detach(pthread_self());
 	for(;;){
 		if(RAIN_ERROR == rain_dipatch_routine()){
-			wod_sys_usleep(100000);
+			wod_usleep(100000);
 		}
 	}
 	return (void *)(0);
@@ -108,7 +107,7 @@ timer_loop(void *arg)
 {
 	for(;;){
 		rain_timer_loop();
-		wod_sys_usleep(100000);
+		wod_usleep(100000);
 	}
 	return (void *)(0);
 }

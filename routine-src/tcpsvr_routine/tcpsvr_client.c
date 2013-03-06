@@ -16,9 +16,9 @@
 
 #define TCPCLI_BUF_DEFAULT_SZ 1024
 static void
-_doRead(struct wod_event_main *loop,void * nv,int mask);
+_doRead(struct wod_event *loop,void * nv,int mask);
 static void
-_doWrite(struct wod_event_main *loop,void * nv,int mask);
+_doWrite(struct wod_event *loop,void * nv,int mask);
 static int real_read(tcpclient_t * cli);
 static int real_write(tcpclient_t * cli,void *buf,int sz);
 
@@ -145,7 +145,7 @@ _paser2(tcpclient_t * cli ,struct wod_cycle_pair pair)
 	wod_cycle_buffer_pop(&cli->cycle_rebuf,numRead);
 }
 static void
-_doRead(struct wod_event_main *loop,void * nv,int mask)
+_doRead(struct wod_event *loop,void * nv,int mask)
 {
 	tcpclient_t * cli = (tcpclient_t *)nv;
 	int ret = real_read(cli);
@@ -170,7 +170,7 @@ _doRead(struct wod_event_main *loop,void * nv,int mask)
 }
 
 static void
-_doWrite(struct wod_event_main *loop,void * nv,int mask)
+_doWrite(struct wod_event *loop,void * nv,int mask)
 {
 	tcpclient_t * cli = (tcpclient_t *)nv;
 	tcpclient_write(cli,NULL,0);
