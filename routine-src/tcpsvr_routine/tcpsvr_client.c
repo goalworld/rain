@@ -20,7 +20,7 @@ _doRead(struct wod_event *loop,void * nv,int mask);
 static void
 _doWrite(struct wod_event *loop,void * nv,int mask);
 static int real_read(tcpclient_t * cli);
-static int real_write(tcpclient_t * cli,void *buf,int sz);
+static int real_write(tcpclient_t * cli,void *buf,unsigned sz);
 
 int
 tcpclient_init(tcpclient_t * cli,wod_socket_t fd,int id)
@@ -123,7 +123,7 @@ _doWrite(struct wod_event *loop,void * nv,int mask)
 	tcpclient_write(cli,NULL,0);
 }
 int
-tcpclient_write(tcpclient_t * cli,void *buf,int sz)
+tcpclient_write(tcpclient_t * cli,void *buf,unsigned sz)
 {
 	int send = real_write(cli,buf,sz);
 	if(send == 0){
@@ -145,7 +145,7 @@ tcpclient_write(tcpclient_t * cli,void *buf,int sz)
 }
 
 static int
-real_write(tcpclient_t * cli,void *buf,int sz)
+real_write(tcpclient_t * cli,void *buf,unsigned sz)
 {
 	assert(sz <= 0xffff);
 	struct wod_cycle_pair pair;
@@ -165,11 +165,10 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 			allsz+=pair.second.sz;
 		}
 	}
-	uint8_t zsBuf[2];
+	uint32_t zsBuf;
 	if(buf){
-		zsBuf[0] = sz >>8;
-		zsBuf[1] = sz;
-		io[num].b_body = zsBuf;
+		zsBuf = htonl(sz);
+		io[num].b_body = &zsBuf;
 		io[num].b_sz = 2;
 		++num;
 		allsz+=2;
@@ -186,15 +185,15 @@ real_write(tcpclient_t * cli,void *buf,int sz)
 			if(wret<0){
 				if(errno == EAGAIN){
 					if(buf){
-						int tmp = allsz-wsz;
+						int leftsz = allsz-wsz;
 						uint8_t *tmpbuf = NULL;
-						if(tmp > sz){
-							int dif = (sz+2-tmp)>0?(sz+2-tmp):0;
-							tmpbuf = zsBuf+dif;
-							wod_cycle_buffer_push(&cli->cycle_wrbuf,zsBuf,2-dif);
+						if(leftsz > sz){
+							int dif = (sz+4-leftsz);
+							tmpbuf = (uint8_t *)&zsBuf+dif;
+							wod_cycle_buffer_push(&cli->cycle_wrbuf,&zsBuf,4-dif);
 						}else{
-							tmpbuf = buf+(sz-tmp);
-							wod_cycle_buffer_push(&cli->cycle_wrbuf,tmpbuf,tmp);
+							tmpbuf = buf+(sz-leftsz);
+							wod_cycle_buffer_push(&cli->cycle_wrbuf,tmpbuf,leftsz);
 						}
 					}
 					wod_cycle_buffer_pop(&cli->cycle_wrbuf,wret);

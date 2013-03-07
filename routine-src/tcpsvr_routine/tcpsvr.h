@@ -79,7 +79,7 @@ int tcpclient_init(tcpclient_t * cli,wod_socket_t fd,int id);
  * return<0:出错了
  */
 
-int tcpclient_write(tcpclient_t * cli,void *buf,int sz);
+int tcpclient_write(tcpclient_t * cli,void *buf,unsigned sz);
 void tcpclient_close(tcpclient_t * cli);
 void tcpclient_destroy(tcpclient_t * cli);
 #define tcpclient_isactive( cli )( !((cli)->sockstate & SOCK_WRITE_WAIT_CLOSED) \
