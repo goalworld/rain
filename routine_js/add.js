@@ -18,7 +18,7 @@ function main()
 	routine.parent.On("exit",function(code){
 		print("[ADD]-PARENT-EXIT",code);
 	});
-	//startTcpSvr("127.0.0.1",8194,'epoll',routine.rid,2);
+	startTcpSvr("127.0.0.1",8194,'epoll',routine.rid,2);
 }
 main();
 
@@ -32,7 +32,7 @@ function startTcpSvr(ip,port,mode,watchdog,headsz){
 	//mode = 'select' 'epoll';
 	var size = 0;
 	var num_pkt = 0;
-	var tcpSvr = routine.Spawn("tcpsvr","mode="+mode+"&ip="+ip+"&port="+port+"&watchdog="+watchdog+"&headsz="+headsz);
+	var tcpSvr = routine.Spawn("tcpsvr","mode="+mode+"&ip="+ip+"&port="+port+"&watchdog="+watchdog);
 	if(tcpSvr){
 		var num=0;
 		tcpSvr.On("message",function(msg){

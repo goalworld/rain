@@ -36,6 +36,7 @@ int
 tcpsvr_listen(tcpsvr_t* svr,const char *host,int port)
 {
 	svr->fd = wod_net_tcp_listen(TCP4,host,port);
+	rain_debug(svr->ctx,"wod_net_tcp_listen:%d\n",svr->fd);
 	wod_net_noblock(svr->fd,1);
 	wod_event_io_add(svr->loop,svr->fd,WV_IO_READ,_doAccept,svr);
 	return RAIN_OK;
@@ -44,6 +45,7 @@ static void
 _doAccept(struct wod_event *loop,void * nv,int mask)
 {
 	tcpsvr_t *svr = (tcpsvr_t *)nv;
+	rain_debug(svr->ctx,"_doAccept:%d\n",svr->fd);
 	for(;;){
 		wod_socket_t cfd = wod_net_accept(svr->fd);
 		if(cfd < 0){

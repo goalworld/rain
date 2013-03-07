@@ -66,7 +66,6 @@ tcpsvr_new(struct rain_ctx*ctx,char *args)
 	char * token;
 	int flag = WV_POLL_SELECT;
 	char modbuf[32];
-	int headsz = 0;
 	// parser
 	for(token = strsep(&tmp,"&");token!=NULL;token=strsep(&tmp,"&"))
 	{
@@ -90,17 +89,10 @@ tcpsvr_new(struct rain_ctx*ctx,char *args)
 				flag = WV_POLL_POLL;
 			}
 			strncpy(modbuf,parm2,sizeof(modbuf));
-		}else if(strcmp(parm,"headsz") == 0){
-			headsz = strtol(parm2,NULL,10);
 		}
 	}
 	free(tmp);
-	if(headsz != 2 && headsz != 4){
-		free(svr);
-		return NULL;
-	}
 	svr->watchdog = rids;
-	svr->headsz = headsz;
 	if( wod_event_create(&svr->loop,10240,flag) != 0){
 		free(svr);
 		return NULL;

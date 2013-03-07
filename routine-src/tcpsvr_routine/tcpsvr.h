@@ -56,7 +56,6 @@ typedef struct tcpsvr_s
 	struct wod_event *loop;
 	long long pre_loop_time;
 	rain_routine_t watchdog;
-	int headsz;
 	long all_recv;
 	bool bInit;
 }tcpsvr_t;
