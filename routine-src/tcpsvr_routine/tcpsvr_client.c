@@ -41,10 +41,8 @@ tcpclient_init(tcpclient_t * cli,wod_socket_t fd,int id)
 	}
 	cli->sockstate = SOCK_OK;
 	wod_event_io_add(cli->svr->loop,fd,WV_IO_READ,_doRead,cli);
-	//wodEvIOAdd(cli->svr->loop,fd,WV_IO_WRITE,_doWrite,cli);
 	cli->parser.buf = &cli->cycle_rebuf;
 	cli->parser.state = PARSE_HEAD;
-	cli->parser.headsz = 4;
 	cli->parser.bodysz = 0;
 	return RAIN_OK;
 }
@@ -238,31 +236,25 @@ real_read(tcpclient_t * cli)
 {
 	struct wod_cycle_pair pair;
 	int fret = 0;
-
 	for(;;){
-		int ret = wod_cycle_buffer_grow(&cli->cycle_rebuf,0,&pair);
+		int ret = wod_cycle_buffer_get_unused(&cli->cycle_rebuf,&pair,512);
 		if(ret != 0){
-			ret = wod_cycle_buffer_grow(&cli->cycle_rebuf,512,&pair);
-			if(ret !=0 ){
-				fret = -1;
-				break;
-			}
+			fret = -1;
+			break;
 		}
-		int rret = 0,allsz=0,num=0;
+		int rret = 0;
+		int num=0;
 		struct wod_socket_buf io[2];
 		io[num].b_body = pair.first.buf;
 		io[num].b_sz = pair.first.sz;
 		++num;
-		allsz +=pair.first.sz;
 		if(pair.second.sz > 0 ){
 			io[1].b_body = pair.second.buf;
 			io[1].b_sz = pair.second.sz;
 			++num;
-			allsz +=pair.second.sz;
 		}
 		rret = wod_net_readv(cli->fd,io,num);
 		if(rret < 0){
-			wod_cycle_buffer_back(&cli->cycle_rebuf,allsz);
 			if(errno == EAGAIN){
 				fret = 1;
 				break;
@@ -272,13 +264,9 @@ real_read(tcpclient_t * cli)
 			}
 		}else if(rret == 0){
 			fret = 0;
-			wod_cycle_buffer_back(&cli->cycle_rebuf,allsz);
-			break;
-		}else if(allsz > rret){
-			fret = 1;
-			wod_cycle_buffer_back(&cli->cycle_rebuf,allsz-rret);
 			break;
 		}
+		wod_cycle_buffer_grow(&cli->cycle_rebuf,rret);
 	}
 	return fret;
 }

@@ -28,9 +28,8 @@ enum
 	PARSE_BODY
 };
 typedef struct tcp_head_parser tcp_head_parser_t;
-struct tcp_head_parser{
+struct tcp_head_parser{//headsz = 4;
 	struct wod_cycle_buffer * buf;
-	unsigned headsz;
 	unsigned state;
 	unsigned bodysz;
 };
