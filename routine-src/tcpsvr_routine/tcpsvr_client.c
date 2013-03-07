@@ -78,7 +78,6 @@ _paser2(tcpclient_t * cli)
 				parser->state = PARSE_BODY;
 				parser->bodysz = htonl(a);
 				allbacksz += 4;
-				rain_debug(cli->svr->ctx,"%d %d",parser->bodysz,wod_cycle_pair_sz(&pair));
 			}
 		}
 		if(parser->state == PARSE_BODY){

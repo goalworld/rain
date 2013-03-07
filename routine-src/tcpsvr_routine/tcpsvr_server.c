@@ -45,7 +45,6 @@ static void
 _doAccept(struct wod_event *loop,void * nv,int mask)
 {
 	tcpsvr_t *svr = (tcpsvr_t *)nv;
-	rain_debug(svr->ctx,"_doAccept:%d\n",svr->fd);
 	for(;;){
 		wod_socket_t cfd = wod_net_accept(svr->fd);
 		if(cfd < 0){
