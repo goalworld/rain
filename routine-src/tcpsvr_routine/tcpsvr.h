@@ -22,6 +22,18 @@ enum
 	SOCK_WRITE_CLOSED=0X2,
 	SOCK_READ_CLOSED=0X4,
 };
+enum
+{
+	PARSE_HEAD,
+	PARSE_BODY
+};
+typedef struct tcp_head_parser tcp_head_parser_t;
+struct tcp_head_parser{
+	struct wod_cycle_buffer * buf;
+	unsigned headsz;
+	unsigned state;
+	unsigned bodysz;
+};
 typedef struct tcpclient_s
 {
 	struct tcpsvr_s *svr;
@@ -31,6 +43,7 @@ typedef struct tcpclient_s
 	int sockstate;
 	struct wod_cycle_buffer cycle_wrbuf;
 	struct wod_cycle_buffer cycle_rebuf;
+	tcp_head_parser_t parser;
 }tcpclient_t;
 
 typedef struct tcpsvr_s

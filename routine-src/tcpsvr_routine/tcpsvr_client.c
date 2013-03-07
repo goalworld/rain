@@ -42,6 +42,10 @@ tcpclient_init(tcpclient_t * cli,wod_socket_t fd,int id)
 	cli->sockstate = SOCK_OK;
 	wod_event_io_add(cli->svr->loop,fd,WV_IO_READ,_doRead,cli);
 	//wodEvIOAdd(cli->svr->loop,fd,WV_IO_WRITE,_doWrite,cli);
+	cli->parser.buf = &cli->cycle_rebuf;
+	cli->parser.state = PARSE_HEAD;
+	cli->parser.headsz = 4;
+	cli->parser.bodysz = 0;
 	return RAIN_OK;
 }
 
@@ -61,101 +65,44 @@ _do_error(tcpclient_t * cli)
 	_release(cli);
 }
 static inline void
-_paser2(tcpclient_t * cli ,struct wod_cycle_pair pair)
+_paser2(tcpclient_t * cli)
 {
-	int firstsz = pair.first.sz;
-	int secondsz = pair.second.sz;
-	uint8_t * cutBuf = pair.first.buf;
-	int bufsz = 0;// big-endian
-	bool bFirst = true;
-	int numRead = 0;
-	while((firstsz + secondsz) > 2){
-		if(bFirst){
-			if(firstsz >= 2){
-				bufsz = (cutBuf[0])<<8|(cutBuf[1]);
-				cutBuf+=2;
-				firstsz-=2;
-				if((firstsz + secondsz) >=bufsz){
-					numRead+=(2+bufsz);
-					void *buf = malloc(bufsz+4);
-					*(int *)(buf) = cli->id;
-					if(firstsz >= bufsz){
-						memcpy(buf+4,cutBuf,bufsz);
-						cutBuf+=bufsz;
-						firstsz-=bufsz;
-						tcpsvr_notifyread(cli->svr,cli,buf,bufsz+4);
-					}else{
-						memcpy(buf+4,cutBuf,firstsz);
-						cutBuf = pair.second.buf;
-						firstsz = 0;
-						memcpy(buf+4+firstsz,cutBuf,bufsz-firstsz);
-						secondsz -= (bufsz-firstsz);
-						bFirst = false;
-						cutBuf+=(bufsz-firstsz);
-						tcpsvr_notifyread(cli->svr,cli,buf,bufsz+4);
-					}
-					continue;
-				}else{
-					break;
-				}
+	tcp_head_parser_t * parser = &cli->parser;
+	struct wod_cycle_pair pair;
+	wod_cycle_buffer_get_used(parser->buf,&pair);
+	for(;;){
+		int allbacksz  = 0;
+		if(parser->state == PARSE_HEAD){
+			unsigned int a;
+			if( wod_cycle_pair_readsz(&pair,&a,4) != 0){
+				return ;
 			}else{
-				bFirst = false;
-				if(firstsz == 1){
-					bufsz  = (cutBuf[0])<<8|(*(uint8_t*)(pair.second.buf));
-					cutBuf = (uint8_t*)(pair.second.buf)+1;
-					secondsz-=1;
-					firstsz = 0;
-				}else{
-					cutBuf = pair.second.buf;
-					bufsz = (cutBuf[0])<<8|(cutBuf[1]);
-					secondsz-=2;
-					cutBuf+=2;
-				}
-				if((firstsz + secondsz) >= bufsz){
-					numRead+=(2+bufsz);
-					void *buf = malloc(bufsz+4);
-					*(int *)(buf) = cli->id;
-					memcpy(buf+4,cutBuf,bufsz);
-					cutBuf+=bufsz;
-					secondsz-=bufsz;
-					tcpsvr_notifyread(cli->svr,cli,buf,bufsz+4);
-					continue;
-				}else{
-					break;
-				}
+				parser->state = PARSE_BODY;
+				parser->bodysz = htonl(a);
+				allbacksz += 4;
 			}
-		}else{
-			bufsz = (cutBuf[0])<<8|(cutBuf[1]);
-			cutBuf+=2;
-			secondsz-=2;
-			if((firstsz + secondsz) >= bufsz){
-				numRead+=(2+bufsz);
-				void *buf = malloc(bufsz+4);
-				*(int *)(buf) = cli->id;
-				memcpy(buf+4,cutBuf,bufsz);
-				cutBuf+=bufsz;
-				secondsz-=bufsz;
-				tcpsvr_notifyread(cli->svr,cli,buf,bufsz+4);
-				continue;
+		}
+		if(parser->state == PARSE_BODY){
+			if(wod_cycle_pair_sz(&pair) >= parser->bodysz){
+				void *buf = malloc(parser->bodysz+4);
+				wod_cycle_pair_readsz(&pair,(char *)buf+4,parser->bodysz);
+				allbacksz += parser->bodysz;
+				wod_cycle_buffer_pop(parser->buf,allbacksz);
+				tcpsvr_notifyread(cli->svr,cli,buf,parser->bodysz+4);
 			}else{
-				break;
+				wod_cycle_buffer_pop(parser->buf,allbacksz);
+				return;
 			}
 		}
 	}
-	wod_cycle_buffer_pop(&cli->cycle_rebuf,numRead);
 }
 static void
 _doRead(struct wod_event *loop,void * nv,int mask)
 {
 	tcpclient_t * cli = (tcpclient_t *)nv;
 	int ret = real_read(cli);
-	struct wod_cycle_pair  pair;
-	if( wod_cycle_buffer_get_used(&cli->cycle_rebuf,&pair) == 0){
-		if(cli->svr->headsz == 2){
-			_paser2(cli,pair);
-		}else{
-			wod_cycle_buffer_pop(&cli->cycle_rebuf,pair.first.sz+pair.second.sz);
-		}
+	if( wod_cycle_buffer_used_size(&cli->cycle_rebuf) > 0){
+		_paser2(cli);
 	}
 	if(ret == 0){
 		wod_event_io_remove(cli->svr->loop,cli->fd,WV_IO_READ);
