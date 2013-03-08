@@ -94,6 +94,7 @@ rain_dipatch_routine(void)
 static void *
 worker(void *arg)
 {
+	int i = 0;
 	pthread_detach(pthread_self());
 	for(;;){
 		if(RAIN_ERROR == rain_dipatch_routine()){
@@ -107,7 +108,8 @@ timer_loop(void *arg)
 {
 	for(;;){
 		rain_timer_loop();
-		wod_usleep(100000);
+		RAIN_LOG(0,"rain_timer_loop %s \n","1");
+		wod_usleep(200000);
 	}
 	return (void *)(0);
 }

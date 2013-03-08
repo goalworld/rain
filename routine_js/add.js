@@ -18,7 +18,7 @@ function main()
 	routine.parent.On("exit",function(code){
 		print("[ADD]-PARENT-EXIT",code);
 	});
-	startTcpSvr("127.0.0.1",8194,'epoll',routine.rid,2);
+	//startTcpSvr("127.0.0.1",8194,'epoll',routine.rid,2);
 }
 main();
 

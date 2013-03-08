@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "rain_mutex.h"
 #include "wod_time.h"
+#define MIN_SLEEP 1000000
 struct rainTimer
 {
 	rain_routine_t ctx_id;
@@ -47,7 +48,7 @@ rain_timer_init()
 	mgr.head = NULL;
 	rain_mutex_init(&mgr.mtx);
 	mgr.runhead = NULL;
-	mgr.min = 1.0;
+	mgr.min = MIN_SLEEP;
 	return RAIN_OK;
 }
 static inline void

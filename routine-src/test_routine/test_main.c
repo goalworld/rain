@@ -30,7 +30,7 @@ test_new(struct rain_ctx *ctx,char *args)
 	char arg[1024];
 	rain_debug(tt->ctx,"TestRunning,arguments:%s",args);
 	fflush(stdout);
-	int ret = 0;
+	/*int ret = 0;
 	sprintf(arg,"ip=%s&port=%d&watchdog=%d&mode=%s&headsz=%d","127.0.0.1",8100,rain_routine_id(ctx),"epoll",4);
 	ret = rain_spawn(ctx,"tcpsvr",arg,&(tt->tcpsvr_id));
 	if(ret == RAIN_ERROR){
@@ -38,6 +38,7 @@ test_new(struct rain_ctx *ctx,char *args)
 		return NULL;
 	}
 	rain_link(ctx,tt->tcpsvr_id);
+	*/
 	RAIN_CALLBACK(ctx,_recv,_recv_rsp,_link_exit,_time_out,NULL);
 	rain_timeout(ctx,60*1000,NULL);
 	return tt;
@@ -49,7 +50,6 @@ test_delete(void *env,int code)
 		return;
 	}
 	test_t * tt = (test_t*)env;
-	rain_kill(tt->ctx,tt->jsv8_test_id,0);
 	free(env);
 }
 static void
@@ -57,8 +57,6 @@ _time_out(void *env,void *userdata)
 {
 	test_t * tt = (test_t*)env;
 	rain_debug(tt->ctx,"_time_out");
-	//rain_kill(tt->ctx,tt->tcpsvr_id,0);
-	rain_kill(tt->ctx,tt->jsv8_test_id,0);
 }
 static void
 _link_exit(void *env,rain_routine_t exitid,int code)
